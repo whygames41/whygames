@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Stickman Legend - WHY GAMES</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  #gameCanvas { display: block; width: 100vw; height: 100vh; object-fit: contain; background: #12141c; }
+  
+  .back-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(20, 24, 35, 0.85);
+    border: 1px solid #454d6b;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    z-index: 50;
+  }
+
+  .touch-ui {
+    position: absolute;
+    bottom: 12px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px;
+    pointer-events: none;
+  }
+  .btn-group { display: flex; gap: 10px; pointer-events: auto; }
+  .btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: rgba(30, 35, 50, 0.75);
+    border: 2px solid rgba(120, 150, 220, 0.6);
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    touch-action: none;
+  }
+  .btn:active { background: rgba(90, 130, 240, 0.8); transform: scale(0.92); }
+  .btn-action { background: rgba(180, 40, 40, 0.75); border-color: #ff5555; }
+  .btn-power { background: rgba(140, 30, 180, 0.75); border-color: #d155ff; }
+  .btn-shop { background: rgba(30, 150, 80, 0.85); border-color: #44ee88; border-radius: 12px; width: 62px; }
+
+  #shopModal {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85%;
+    max-width: 480px;
+    background: rgba(18, 20, 28, 0.95);
+    border: 2px solid #ffcc00;
+    border-radius: 14px;
+    padding: 16px;
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 0 25px rgba(255, 204, 0, 0.4);
+    z-index: 100;
+  }
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .shop-item {
+    background: #222636;
+    border: 1px solid #454d6b;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .shop-btn {
+    margin-top: 6px;
+    padding: 6px;
+    background: #ffaa00;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #000;
+    width: 100%;
+  }
+  .close-shop {
+    background: #e63946;
+    border: none;
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">⬅ WHY GAMES</a>
+<canvas id="gameCanvas" width="900" height="500"></canvas>
+
+<div class="touch-ui">
+  <div class="btn-group">
+    <div class="btn" id="btnLeft">◀</div>
+    <div class="btn" id="btnRight">▶</div>
+    <div class="btn" id="btnJump">UP</div>
+  </div>
+  <div class="btn-group">
+    <div class="btn btn-action" id="btnHit">PUNCH</div>
+    <div class="btn btn-power" id="btnBeam">BEAM</div>
+    <div class="btn btn-shop" id="btnShop">SHOP</div>
+  </div>
+</div>
+
+<div id="shopModal">
+  <h2 style="color:#ffcc00;">ARMORY SHOP</h2>
+  <p style="font-size:13px; margin-top:4px;">Upgrade weapons and armor using coins!</p>
+  <div class="shop-grid">
+    <div class="shop-item">
+      <h4>Pistol Gun</h4>
+      <p>Cost: 30 Coins</p>
+      <button class="shop-btn" onclick="buyItem('pistol', 30)">Buy</button>
+    </div>
+    <div class="shop-item">
+      <h4>Plasma Rifle</h4>
+      <p>Cost: 75 Coins</p>
+      <button class="shop-btn" onclick="buyItem('rifle', 75)">Buy</button>
+    </div>
+    <div class="shop-item">
+      <h4>Titan Armor</h4>
+      <p>Cost: 40 Coins</p>
+      <button class="shop-btn" onclick="buyItem('armor', 40)">Buy</button>
+    </div>
+    <div class="shop-item">
+      <h4>Gold Skin</h4>
+      <p>Cost: 50 Coins</p>
+      <button class="shop-btn" onclick="buyItem('gold', 50)">Buy</button>
+    </div>
+  </div>
+  <button class="close-shop" onclick="toggleShop(false)">RESUME GAME</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, duration, type='sine') {
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e){}
+}
+
+const orbs = Array.from({length: 30}, () => ({
+  x: Math.random() * 900,
+  y: Math.random() * 500,
+  r: Math.random() * 3 + 1,
+  speed: Math.random() * 0.4 + 0.2
+}));
+
+const player = {
+  x: 120, y: 360, vx: 0, vy: 0, speed: 5,
+  isGrounded: true, facing: 1,
+  hp: 120, maxHp: 120, coins: 50, energy: 100,
+  color: '#ffffff', weapon: 'fists', armor: 0,
+  attackState: null, attackTimer: 0
+};
+
+let enemies = [];
+let bullets = [];
+let coins = [];
+let particles = [];
+let currentLevel = 1;
+let isShopOpen = false;
+let gameOver = false;
+
+const keys = { left: false, right: false };
+
+function setupTouch(id, onDown, onUp) {
+  const el = document.getElementById(id);
+  const start = (e) => { e.preventDefault(); if(audioCtx.state === 'suspended') audioCtx.resume(); onDown(); };
+  const end = (e) => { e.preventDefault(); if(onUp) onUp(); };
+  el.addEventListener('touchstart', start, {passive:false});
+  el.addEventListener('touchend', end, {passive:false});
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', end);
+}
+
+setupTouch('btnLeft', () => keys.left = true, () => keys.left = false);
+setupTouch('btnRight', () => keys.right = true, () => keys.right = false);
+setupTouch('btnJump', () => {
+  if(player.isGrounded) { player.vy = -13; player.isGrounded = false; playSound(320, 0.1); }
+});
+setupTouch('btnHit', () => playerAttack());
+setupTouch('btnBeam', () => triggerBeam());
+setupTouch('btnShop', () => toggleShop(true));
+
+function toggleShop(open) {
+  isShopOpen = open;
+  document.getElementById('shopModal').style.display = open ? 'block' : 'none';
+}
+
+function buyItem(type, cost) {
+  if(player.coins >= cost) {
+    player.coins -= cost;
+    playSound(600, 0.2, 'square');
+    if(type === 'pistol') player.weapon = 'pistol';
+    if(type === 'rifle') player.weapon = 'rifle';
+    if(type === 'armor') { player.armor += 1; player.maxHp += 25; player.hp = player.maxHp; }
+    if(type === 'gold') player.color = '#ffcc00';
+    alert("Item Purchased Successfully!");
+  } else {
+    alert("Not enough coins!");
+  }
+}
+
+function spawnParticles(x, y, color, count=6) {
+  for(let i=0; i<count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      color, life: 20
+    });
+  }
+}
+
+function triggerBeam() {
+  if(player.energy >= 50) {
+    player.energy -= 50;
+    player.attackState = 'beam';
+    player.attackTimer = 22;
+    playSound(200, 0.4, 'sawtooth');
+  }
+}
+
+function playerAttack() {
+  if(player.weapon !== 'fists') {
+    const dmg = player.weapon === 'pistol' ? 25 : 55;
+    bullets.push({
+      x: player.x + (25 * player.facing),
+      y: player.y + 12,
+      vx: player.facing * 12,
+      damage: dmg
+    });
+    playSound(450, 0.08, 'square');
+  } else {
+    player.attackState = 'punch';
+    player.attackTimer = 12;
+    playSound(180, 0.08, 'triangle');
+  }
+}
+
+function spawnWave(lvl) {
+  enemies = [];
+  const isBoss = lvl % 3 === 0;
+  const count = isBoss ? 2 : 2 + lvl;
+  for(let i=0; i<count; i++) {
+    enemies.push({
+      x: (i % 2 === 0 ? 920 : -30) + (i * 35),
+      y: 360,
+      hp: 35 + (lvl * 15),
+      maxHp: 35 + (lvl * 15),
+      isBoss: false,
+      speed: 1.5 + Math.random(),
+      cooldown: 0
+    });
+  }
+  if(isBoss) {
+    enemies.push({
+      x: 950, y: 345,
+      hp: 250 + (lvl * 50),
+      maxHp: 250 + (lvl * 50),
+      isBoss: true,
+      speed: 1.8,
+      cooldown: 0
+    });
+  }
+}
+
+spawnWave(currentLevel);
+
+function update() {
+  if(isShopOpen || gameOver) return;
+
+  if(keys.left) { player.x -= player.speed; player.facing = -1; }
+  if(keys.right) { player.x += player.speed; player.facing = 1; }
+  player.x = Math.max(30, Math.min(870, player.x));
+
+  player.vy += 0.7;
+  player.y += player.vy;
+  if(player.y >= 360) { player.y = 360; player.vy = 0; player.isGrounded = true; }
+
+  if(player.attackTimer > 0) player.attackTimer--;
+  else player.attackState = null;
+  if(player.energy < 100) player.energy += 0.2;
+
+  bullets.forEach((b, bi) => {
+    b.x += b.vx;
+    enemies.forEach(e => {
+      if(Math.abs(b.x - e.x) < 25 && Math.abs(b.y - e.y) < 40) {
+        e.hp -= b.damage;
+        spawnParticles(b.x, b.y, '#3b82f6', 4);
+        bullets.splice(bi, 1);
+      }
+    });
+  });
+
+  enemies.forEach((e, ei) => {
+    if(player.attackState === 'punch') {
+      if(Math.abs(player.y - e.y) < 30 && (e.x - player.x) * player.facing > 0 && Math.abs(e.x - player.x) < 55) {
+        e.hp -= 25;
+        e.x += player.facing * 18;
+        spawnParticles(e.x, e.y, '#ff4444', 6);
+        playSound(140, 0.1);
+      }
+    } else if(player.attackState === 'beam') {
+      if((player.facing === 1 && e.x > player.x) || (player.facing === -1 && e.x < player.x)) {
+        e.hp -= 3;
+        spawnParticles(e.x, e.y, '#c084fc', 2);
+      }
+    }
+
+    const dist = player.x - e.x;
+    if(Math.abs(dist) > 35) {
+      e.x += (dist > 0 ? 1 : -1) * e.speed;
+    } else {
+      if(e.cooldown <= 0) {
+        const damage = Math.max(2, (e.isBoss ? 16 : 8) - (player.armor * 2.5));
+        player.hp -= damage;
+        e.cooldown = 45;
+        playSound(100, 0.15, 'noise');
+        spawnParticles(player.x, player.y, '#ff2222', 8);
+      }
+    }
+    if(e.cooldown > 0) e.cooldown--;
+
+    if(e.hp <= 0) {
+      coins.push({ x: e.x, y: 390, val: e.isBoss ? 30 : 10 });
+      spawnParticles(e.x, e.y, '#ffcc00', 10);
+      enemies.splice(ei, 1);
+    }
+  });
+
+  coins.forEach((c, ci) => {
+    if(Math.abs(player.x - c.x) < 30 && Math.abs(player.y - c.y) < 40) {
+      player.coins += c.val;
+      playSound(800, 0.08, 'sine');
+      coins.splice(ci, 1);
+    }
+  });
+
+  if(enemies.length === 0) {
+    currentLevel++;
+    player.coins += 20;
+    player.hp = Math.min(player.maxHp, player.hp + 30);
+    spawnWave(currentLevel);
+  }
+
+  if(player.hp <= 0) gameOver = true;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = '#1d2233';
+  ctx.lineWidth = 1;
+  for(let x=0; x<900; x+=45) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke(); }
+  for(let y=0; y<500; y+=45) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke(); }
+
+  ctx.fillStyle = '#2d354d';
+  orbs.forEach(o => {
+    o.y -= o.speed;
+    if(o.y < 0) o.y = 500;
+    ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI*2); ctx.fill();
+  });
+
+  ctx.fillStyle = '#171b26';
+  ctx.fillRect(0, 410, 900, 90);
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, 410); ctx.lineTo(900, 410); ctx.stroke();
+
+  ctx.fillStyle = '#ffcc00';
+  coins.forEach(c => {
+    ctx.beginPath(); ctx.arc(c.x, c.y, 7, 0, Math.PI*2); ctx.fill();
+  });
+
+  ctx.fillStyle = '#38bdf8';
+  bullets.forEach(b => ctx.fillRect(b.x, b.y, 10, 4));
+
+  drawStickman(player.x, player.y, player.color, player.facing, player.attackState, player.armor > 0);
+
+  enemies.forEach(e => {
+    drawStickman(e.x, e.y, e.isBoss ? '#a855f7' : '#ef4444', e.x < player.x ? 1 : -1, null, false, e.isBoss ? 1.4 : 1);
+    ctx.fillStyle = '#444';
+    ctx.fillRect(e.x - 16, e.y - 25, 32, 4);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(e.x - 16, e.y - 25, (e.hp / e.maxHp) * 32, 4);
+  });
+
+  particles.forEach((p, pi) => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 3, 3);
+    if(p.life <= 0) particles.splice(pi, 1);
+  });
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 15px Arial';
+  ctx.fillText(`HP: ${Math.max(0, Math.floor(player.hp))}/${player.maxHp}`, 20, 30);
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(20, 38, (player.hp / player.maxHp) * 140, 8);
+
+  ctx.fillStyle = '#a855f7';
+  ctx.fillRect(20, 50, (player.energy / 100) * 140, 5);
+
+  ctx.fillStyle = '#ffcc00';
+  ctx.fillText(`Coins: ${player.coins}`, 780, 30);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(`Wave ${currentLevel}${currentLevel % 3 === 0 ? ' [BOSS]' : ''}`, 410, 30);
+
+  if(gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(0,0,900,500);
+    ctx.fillStyle = '#ef4444';
+    ctx.font = 'bold 36px Arial';
+    ctx.fillText("GAME OVER", 340, 240);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#fff';
+    ctx.fillText("Reload page to play again", 360, 275);
+  }
+}
+
+function drawStickman(x, y, color, facing, attack, hasArmor, scale=1) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3 * scale;
+  
+  if(hasArmor) {
+    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeRect(x - 14 * scale, y - 18 * scale, 28 * scale, 55 * scale);
+    ctx.strokeStyle = color;
+  }
+
+  ctx.beginPath();
+  ctx.arc(x, y - 10 * scale, 9 * scale, 0, Math.PI*2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x, y - 1 * scale);
+  ctx.lineTo(x, y + 26 * scale);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x, y + 26 * scale);
+  ctx.lineTo(x - 9 * scale, y + 48 * scale);
+  ctx.moveTo(x, y + 26 * scale);
+  ctx.lineTo(x + 9 * scale, y + 48 * scale);
+  ctx.stroke();
+
+  ctx.beginPath();
+  if(attack === 'punch') {
+    ctx.moveTo(x, y + 8 * scale);
+    ctx.lineTo(x + (25 * facing * scale), y + 8 * scale);
+  } else if(attack === 'beam') {
+    ctx.moveTo(x, y + 8 * scale);
+    ctx.lineTo(x + (15 * facing * scale), y + 8 * scale);
+    ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
+    const bx = facing === 1 ? x + 15 : 0;
+    const bw = facing === 1 ? 900 - bx : x - 15;
+    ctx.fillRect(bx, y, bw, 15);
+  } else {
+    ctx.moveTo(x, y + 8 * scale);
+    ctx.lineTo(x - (8 * facing * scale), y + 20 * scale);
+    ctx.moveTo(x, y + 8 * scale);
+    ctx.lineTo(x + (8 * facing * scale), y + 20 * scale);
+  }
+  ctx.stroke();
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+  </html>
+  
