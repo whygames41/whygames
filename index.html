@@ -3,58 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WHY GAMES | Play Free Action Games</title>
+<title>WHY GAMES | Ultimate Online Arcade</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-  body { background: #0f111a; color: #fff; text-align: center; padding-bottom: 50px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', system-ui, sans-serif; }
   
-  /* Header */
-  header { background: #181b26; padding: 25px 15px; border-bottom: 2px solid #ffcc00; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-  h1 { font-size: 32px; letter-spacing: 2px; color: #ffcc00; text-transform: uppercase; }
-  h1 span { color: #fff; }
-  p.tagline { color: #8f9ba8; font-size: 14px; margin-top: 5px; }
+  /* Vibrant Deep Indigo Gradient Background */
+  body {
+    background: radial-gradient(circle at top, #2b1055, #0a071b 80%);
+    color: #ffffff;
+    min-height: 100vh;
+    padding-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-  /* Games Grid */
-  .container { max-width: 900px; margin: 30px auto; padding: 0 15px; }
-  h2 { font-size: 20px; text-align: left; margin-bottom: 15px; color: #38bdf8; border-left: 4px solid #38bdf8; padding-left: 8px; }
-  
-  .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-  
-  /* Game Card */
-  .game-card { background: #1a1e2d; border-radius: 12px; overflow: hidden; border: 1px solid #2e364f; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-  .card-banner { height: 130px; background: linear-gradient(135deg, #1e293b, #0f172a); display: flex; align-items: center; justify-content: center; font-size: 40px; }
-  .card-body { padding: 15px; text-align: left; }
-  .card-title { font-size: 18px; font-weight: bold; color: #fff; }
-  .card-desc { font-size: 12px; color: #94a3b8; margin: 6px 0 14px 0; line-height: 1.4; }
-  
-  .btn-group { display: flex; gap: 8px; }
-  .btn { flex: 1; padding: 10px 0; border: none; border-radius: 6px; font-weight: bold; font-size: 13px; text-align: center; text-decoration: none; cursor: pointer; display: block; }
-  .btn-play { background: #ffcc00; color: #000; }
-  .btn-apk { background: #10b981; color: #fff; }
+  /* Glowing Modern Navbar */
+  header {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 22px 20px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
 
-  footer { margin-top: 40px; color: #64748b; font-size: 12px; }
+  .logo-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(90deg, #ff007f, #7928ca);
+    padding: 6px 18px;
+    border-radius: 30px;
+    box-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  p.tagline {
+    color: #e0d4fc;
+    font-size: 13px;
+    margin-top: 10px;
+    font-weight: 500;
+  }
+
+  /* Content Wrapper */
+  .container {
+    width: 90%;
+    max-width: 960px;
+    margin-top: 35px;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #00f2fe;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+  }
+
+  /* Glassmorphism Game Card */
+  .game-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+
+  .game-card:hover {
+    transform: translateY(-6px);
+    border-color: #00f2fe;
+  }
+
+  /* Bright Visual Card Header */
+  .card-banner {
+    height: 140px;
+    background: linear-gradient(135deg, #ff007f, #4facfe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+
+  .card-body {
+    padding: 20px;
+    text-align: left;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(0, 242, 254, 0.2);
+    color: #00f2fe;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 242, 254, 0.4);
+  }
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 6px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: #c4b5fd;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  /* Action Buttons */
+  .btn-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 12px 0;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .btn-play {
+    background: linear-gradient(135deg, #00f2fe, #4facfe);
+    color: #040d21;
+    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+  }
+
+  .btn-play:active {
+    transform: scale(0.96);
+  }
+
+  .btn-apk {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-apk:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  footer {
+    margin-top: 50px;
+    color: #8b7cb6;
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>WHY <span>GAMES</span></h1>
-  <p class="tagline">Play Instant Web Games & Download Free Mobile APKs</p>
+  <div class="logo-box">
+    <h1>WHY GAMES</h1>
+  </div>
+  <p class="tagline">⚡ Next-Gen Free Web Games & Mobile APKs</p>
 </header>
 
 <div class="container">
-  <h2>FEATURED GAMES</h2>
+  <div class="section-title">🔥 Featured Releases</div>
+  
   <div class="game-grid">
     
-    <!-- Game Card 1: Stickman Legend -->
+    <!-- Stickman Legend Card -->
     <div class="game-card">
-      <div class="card-banner">⚔️🥊</div>
+      <div class="card-banner">🥊⚡</div>
       <div class="card-body">
-        <div class="card-title">Stickman Legend: Shadow</div>
-        <div class="card-desc">Fighter game with Boss battles, weapons shop, armor upgrades, and super laser beam attacks!</div>
+        <span class="badge">ACTION / FIGHTING</span>
+        <div class="card-title">Stickman Legend</div>
+        <div class="card-desc">Fight waves of enemies, defeat massive bosses, collect gold coins, and unlock plasma rifles in the armory!</div>
         <div class="btn-group">
-          <a href="stickman.html" class="btn btn-play">Play Online</a>
-          <a href="#" class="btn btn-apk" onclick="alert('APK file upload hone ke baad direct download hoga!')">Download APK</a>
+          <a href="stickman.html" class="btn btn-play">Play Now</a>
+          <a href="#" class="btn btn-apk" onclick="alert('APK file upload hone ke baad download shuru ho jayegi!')">Get APK</a>
         </div>
       </div>
     </div>
@@ -63,9 +215,8 @@
 </div>
 
 <footer>
-  <p>© 2026 WHY GAMES • Created with passion</p>
+  <p>© 2026 WHY GAMES • Built for Players</p>
 </footer>
 
 </body>
-  </html>
-  
+</html>
