@@ -17,7 +17,6 @@
     align-items: center;
   }
 
-  /* Header with Rocket Logo */
   header {
     width: 100%;
     background: rgba(255, 255, 255, 0.04);
@@ -47,7 +46,6 @@
     justify-content: center;
   }
 
-  /* Glowing Thruster Rocket Beam Effect */
   .rocket-logo-wrapper::after {
     content: '';
     position: absolute;
@@ -100,12 +98,11 @@
     font-size: 13px;
     margin-top: 8px;
     font-weight: 600;
-    letter-spacing: 0.5px;
   }
 
   .container {
     width: 90%;
-    max-width: 960px;
+    max-width: 980px;
     margin-top: 30px;
   }
 
@@ -151,7 +148,6 @@
     justify-content: center;
     font-size: 52px;
     text-shadow: 0 6px 16px rgba(0,0,0,0.4);
-    position: relative;
   }
 
   .card-body {
@@ -216,20 +212,13 @@
     color: #040d21;
     box-shadow: 0 4px 16px rgba(0, 242, 254, 0.5);
   }
-
-  .btn-play:active {
-    transform: scale(0.96);
-  }
+  .btn-play:active { transform: scale(0.96); }
 
   .btn-apk {
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.2);
     font-size: 13px;
-  }
-
-  .btn-apk:active {
-    background: rgba(255, 255, 255, 0.15);
   }
 
   footer {
@@ -258,7 +247,7 @@
   
   <div class="game-grid">
     
-    <!-- Stickman Legend Card -->
+    <!-- Game 1: Stickman Legend -->
     <div class="game-card">
       <div class="card-banner" style="background: linear-gradient(135deg, #ff007f, #7928ca);">
         🥊⚡
@@ -274,7 +263,7 @@
       </div>
     </div>
 
-    <!-- Geometry Neon Dash Card -->
+    <!-- Game 2: Geometry Neon Dash -->
     <div class="game-card">
       <div class="card-banner" style="background: linear-gradient(135deg, #a855f7, #00f2fe);">
         ⚡🔷
@@ -285,6 +274,21 @@
         <div class="card-desc">Jump over spikes and floating traps! Unlock 20 stages and legendary flame cube skins.</div>
         <div class="btn-group">
           <a href="geometry.html" class="btn btn-play">▶ PLAY</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game 3: Subway Neon Runner -->
+    <div class="game-card">
+      <div class="card-banner" style="background: linear-gradient(135deg, #06b6d4, #ec4899);">
+        🚇🛹
+      </div>
+      <div class="card-body">
+        <span class="badge" style="color:#38bdf8; border-color:#38bdf8;">ENDLESS 3D RUNNER</span>
+        <div class="card-title">Subway Neon Runner</div>
+        <div class="card-desc">Dodge bullet trains, slide under lasers, activate jetpacks, and ride legendary hoverboards!</div>
+        <div class="btn-group">
+          <a href="runner.html" class="btn btn-play">▶ PLAY</a>
         </div>
       </div>
     </div>
