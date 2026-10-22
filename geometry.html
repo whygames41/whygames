@@ -73,7 +73,7 @@
     background: rgba(10, 12, 22, 0.98);
     border: 2px solid #a855f7;
     border-radius: 18px;
-    padding: 20px;
+    padding: 22px;
     color: #fff;
     text-align: center;
     box-shadow: 0 0 35px rgba(168, 85, 247, 0.4);
@@ -108,8 +108,8 @@
     font-size: 14px;
     cursor: pointer;
   }
-  .lvl-btn.active { border-color: #38bdf8; color: #38bdf8; }
-  .lvl-btn.locked { opacity: 0.4; cursor: not-allowed; }
+  .lvl-btn.active { border-color: #38bdf8; color: #38bdf8; background: #0f172a; }
+  .lvl-btn.locked { opacity: 0.35; cursor: not-allowed; border-color: #334155; }
 
   .btn-action {
     background: #38bdf8;
@@ -131,16 +131,27 @@
     background: #22c55e;
     border: none;
     color: #fff;
-    padding: 10px 24px;
-    border-radius: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 15px;
     margin-top: 10px;
     cursor: pointer;
     width: 100%;
   }
   .close-btn { background: #ef4444; }
   .select-lvl-btn { background: #3b82f6; }
+
+  .tap-hint {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #38bdf8;
+    animation: blink 1s infinite alternate;
+  }
+  @keyframes blink {
+    0% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
 </style>
 </head>
 <body>
@@ -189,12 +200,12 @@
 
 <!-- Level Select Modal -->
 <div id="stageSelectModal">
-  <h2 style="color:#38bdf8; font-size:20px;">SELECT LEVEL (1 - 20)</h2>
+  <h2 style="color:#38bdf8; font-size:20px;">LEVEL MAP (1 - 20)</h2>
   <div class="level-grid" id="levelContainer"></div>
   <button class="modal-btn close-btn" onclick="document.getElementById('stageSelectModal').style.display='none'">CLOSE</button>
 </div>
 
-<!-- Game Over -->
+<!-- Game Over Modal -->
 <div id="gameOverModal">
   <h2 style="color:#ef4444; font-size:26px;">CRASHED!</h2>
   <p style="margin: 8px 0; font-size:13px; color:#94a3b8;" id="progressPercent">Attempt: 45% Cleared</p>
@@ -203,11 +214,12 @@
   <button class="modal-btn select-lvl-btn" onclick="openLevelSelect()">Choose Level</button>
 </div>
 
-<!-- Stage Clear -->
+<!-- Stage Cleared Screen (Auto Tap-Anywhere) -->
 <div id="stageClearModal">
-  <h2 style="color:#22c55e; font-size:26px;">STAGE CLEARED! 🎉</h2>
-  <p style="margin: 10px 0; font-size:14px;" id="clearMsg">Level 1 Complete! +15 Stars Earned.</p>
-  <button class="modal-btn" onclick="nextStage()">NEXT LEVEL ➔</button>
+  <h2 style="color:#22c55e; font-size:28px;">STAGE CLEARED! 🎉</h2>
+  <p style="margin: 10px 0; font-size:16px; color:#facc15; font-weight:800;" id="clearMsg">LEVEL 1 CLEARED! ➔ LEVEL 2 UNLOCKED</p>
+  <button class="modal-btn" onclick="nextStage()">START NEXT LEVEL ➔</button>
+  <div class="tap-hint">👉 Tap anywhere on screen to start next level</div>
 </div>
 
 <script>
@@ -240,11 +252,13 @@ const player = {
   x: 120, y: GROUND_Y - CUBE_SIZE, size: CUBE_SIZE,
   vy: 0, gravity: 0.92, jumpForce: -13.8,
   isGrounded: true, rotation: 0,
-  skin: 'classic', stars: 20
+  skin: 'classic', stars: parseInt(localStorage.getItem('whygames_stars')) || 20
 };
 
-let currentLevel = 1;
-let unlockedLevel = 20;
+// Progression: Saved in LocalStorage so progress persists!
+let currentLevel = parseInt(localStorage.getItem('whygames_curr_lvl')) || 1;
+let unlockedLevel = parseInt(localStorage.getItem('whygames_unlocked_lvl')) || 1;
+
 let obstacles = [];
 let particles = [];
 let speed = 6;
@@ -252,6 +266,13 @@ let distance = 0;
 let trackLength = 3200;
 let gameOver = false;
 let isShopOpen = false;
+let isStageClearOpen = false;
+
+function saveProgress() {
+  localStorage.setItem('whygames_curr_lvl', currentLevel);
+  localStorage.setItem('whygames_unlocked_lvl', unlockedLevel);
+  localStorage.setItem('whygames_stars', player.stars);
+}
 
 // 20 Stages Setup
 function initTrack(lvl) {
@@ -261,10 +282,12 @@ function initTrack(lvl) {
   player.vy = 0;
   player.rotation = 0;
   gameOver = false;
+  isStageClearOpen = false;
   document.getElementById('stageNum').innerText = lvl;
 
+  // Medium to Hard speed & length progression
   speed = 5.8 + (lvl * 0.2);
-  trackLength = 2600 + (lvl * 250);
+  trackLength = 2600 + (lvl * 240);
 
   let currentX = 550;
   while(currentX < trackLength) {
@@ -280,7 +303,6 @@ function initTrack(lvl) {
       }
     } else if(lvl <= 12) {
       if(rand < 0.45) {
-        // Double spike
         obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
         obstacles.push({ x: currentX + 34, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
       } else if(rand < 0.75) {
@@ -290,7 +312,6 @@ function initTrack(lvl) {
         obstacles.push({ x: currentX, y: GROUND_Y - 70, w: 60, h: 22, type: 'block' });
       }
     } else {
-      // Hard: Triple spikes & rapid rhythm
       if(rand < 0.45) {
         obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
         obstacles.push({ x: currentX + 34, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
@@ -308,9 +329,17 @@ function initTrack(lvl) {
 }
 initTrack(currentLevel);
 
-function jump() {
+// Tap anywhere handler
+function handleTapAnywhere() {
   if(audioCtx.state === 'suspended') audioCtx.resume();
-  if(gameOver || isShopOpen) return;
+
+  // If Stage Clear popup is on screen, tapping anywhere launches next level!
+  if(isStageClearOpen) {
+    nextStage();
+    return;
+  }
+
+  if(gameOver || isShopOpen || document.getElementById('stageSelectModal').style.display === 'block') return;
 
   if(player.isGrounded) {
     player.vy = player.jumpForce;
@@ -319,15 +348,15 @@ function jump() {
   }
 }
 
-window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
+window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleTapAnywhere(); });
 window.addEventListener('touchstart', (e) => {
-  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal') && !e.target.closest('#stageSelectModal') && !e.target.closest('#stageClearModal')) {
-    jump();
+  if(!e.target.closest('button') && !e.target.closest('a')) {
+    handleTapAnywhere();
   }
 });
 window.addEventListener('mousedown', (e) => {
-  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal') && !e.target.closest('#stageSelectModal') && !e.target.closest('#stageClearModal')) {
-    jump();
+  if(!e.target.closest('button') && !e.target.closest('a')) {
+    handleTapAnywhere();
   }
 });
 
@@ -346,6 +375,7 @@ function buySkin(s, cost) {
     player.stars -= cost;
     player.skin = s;
     updateStarUI();
+    saveProgress();
     alert("Unlocked & Equipped!");
   } else {
     alert("Not enough stars! Watch an ad to get +50 stars.");
@@ -355,19 +385,23 @@ function buySkin(s, cost) {
 function updateStarUI() {
   document.getElementById('starCounter').innerText = player.stars;
 }
+updateStarUI();
 
 function openLevelSelect() {
   const container = document.getElementById('levelContainer');
   container.innerHTML = '';
   for(let i=1; i<=20; i++) {
     const btn = document.createElement('button');
-    btn.className = `lvl-btn ${i === currentLevel ? 'active' : ''} ${i > unlockedLevel ? 'locked' : ''}`;
-    btn.innerText = i;
+    const isLocked = i > unlockedLevel;
+    btn.className = `lvl-btn ${i === currentLevel ? 'active' : ''} ${isLocked ? 'locked' : ''}`;
+    btn.innerText = isLocked ? `🔒 ${i}` : i;
     btn.onclick = () => {
-      if(i <= unlockedLevel) {
+      if(!isLocked) {
         currentLevel = i;
+        saveProgress();
         document.getElementById('stageSelectModal').style.display = 'none';
         document.getElementById('gameOverModal').style.display = 'none';
+        document.getElementById('stageClearModal').style.display = 'none';
         initTrack(currentLevel);
       }
     };
@@ -378,9 +412,14 @@ function openLevelSelect() {
 
 function nextStage() {
   document.getElementById('stageClearModal').style.display = 'none';
+  isStageClearOpen = false;
+
   if(currentLevel < 20) {
     currentLevel++;
-    unlockedLevel = Math.max(unlockedLevel, currentLevel);
+    if(currentLevel > unlockedLevel) {
+      unlockedLevel = currentLevel;
+    }
+    saveProgress();
   }
   initTrack(currentLevel);
 }
@@ -388,6 +427,7 @@ function nextStage() {
 function restartLevel() {
   document.getElementById('gameOverModal').style.display = 'none';
   document.getElementById('stageClearModal').style.display = 'none';
+  isStageClearOpen = false;
   initTrack(currentLevel);
 }
 
@@ -397,6 +437,7 @@ function watchAdReward(type) {
     if(type === 'stars') {
       player.stars += 50;
       updateStarUI();
+      saveProgress();
       alert("Reward: +50 Stars Added!");
     } else if(type === 'gold_skin') {
       player.skin = 'gold';
@@ -423,7 +464,7 @@ function spawnSparks(x, y, color) {
 }
 
 function update() {
-  if(gameOver || isShopOpen || document.getElementById('stageClearModal').style.display === 'block') return;
+  if(gameOver || isShopOpen || isStageClearOpen || document.getElementById('stageSelectModal').style.display === 'block') return;
 
   distance += speed;
 
@@ -450,7 +491,6 @@ function update() {
   obstacles.forEach(obs => {
     obs.x -= speed;
 
-    // Pixel-perfect Hitbox (Spikes are strictly ABOVE ground)
     const pLeft = player.x + 6;
     const pRight = player.x + player.size - 6;
     const pTop = player.y + 4;
@@ -471,129 +511,6 @@ function update() {
     }
   });
 
-  // Particles
   particles.forEach((p, pi) => {
     p.x += p.vx; p.y += p.vy; p.life--;
-    if(p.life <= 0) particles.splice(pi, 1);
-  });
-
-  // Stage Clear Condition
-  if(distance >= trackLength && !gameOver) {
-    player.stars += 15 + Math.floor(currentLevel * 1.5);
-    updateStarUI();
-    document.getElementById('clearMsg').innerText = `Level ${currentLevel} Complete! +${15 + Math.floor(currentLevel * 1.5)} Stars.`;
-    document.getElementById('stageClearModal').style.display = 'block';
-  }
-}
-
-function draw() {
-  ctx.fillStyle = '#090a14';
-  ctx.fillRect(0, 0, 900, 500);
-
-  // Dynamic Grid shifts by stage
-  ctx.strokeStyle = currentLevel > 12 ? '#3b0764' : '#1e1b4b';
-  ctx.lineWidth = 1;
-  const gridShift = distance % 40;
-  for(let x = -gridShift; x < 900; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke(); }
-  for(let y = 0; y < 500; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke(); }
-
-  // Solid Floor (Under ground line)
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(0, GROUND_Y, 900, 500 - GROUND_Y);
-
-  // Floor Edge Line
-  ctx.strokeStyle = currentLevel > 12 ? '#ef4444' : '#00f2fe';
-  ctx.lineWidth = 3;
-  ctx.beginPath(); 
-  ctx.moveTo(0, GROUND_Y); 
-  ctx.lineTo(900, GROUND_Y); 
-  ctx.stroke();
-
-  // Progress Bar
-  const progPct = Math.min(1, distance / trackLength);
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.fillRect(220, 16, 460, 8);
-  ctx.fillStyle = '#22c55e';
-  ctx.fillRect(220, 16, 460 * progPct, 8);
-
-  particles.forEach(p => {
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, 4, 4);
-  });
-
-  // Obstacles Rendered EXACTLY on top of GROUND_Y
-  obstacles.forEach(obs => {
-    if(obs.x > -60 && obs.x < 960) {
-      if(obs.type === 'spike') {
-        // Neon Red Triangle resting perfectly on the floor
-        ctx.fillStyle = '#ef4444';
-        ctx.strokeStyle = '#fca5a5';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(obs.x, GROUND_Y);
-        ctx.lineTo(obs.x + (obs.w / 2), GROUND_Y - obs.h);
-        ctx.lineTo(obs.x + obs.w, GROUND_Y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Inner glowing core
-        ctx.fillStyle = '#ff8888';
-        ctx.beginPath();
-        ctx.moveTo(obs.x + 6, GROUND_Y);
-        ctx.lineTo(obs.x + (obs.w / 2), GROUND_Y - obs.h + 8);
-        ctx.lineTo(obs.x + obs.w - 6, GROUND_Y);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        ctx.fillStyle = '#6366f1';
-        ctx.strokeStyle = '#c7d2fe';
-        ctx.lineWidth = 2;
-        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-        ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-      }
-    }
-  });
-
-  // Player Cube
-  ctx.save();
-  ctx.translate(player.x + player.size / 2, player.y + player.size / 2);
-  ctx.rotate(player.rotation);
-
-  if(player.skin === 'flame') {
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
-    ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(3, -6, 5, 5);
-  } else if(player.skin === 'gold') {
-    ctx.fillStyle = '#facc15';
-    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
-    ctx.fillStyle = '#78350f';
-    ctx.fillRect(3, -6, 5, 5);
-  } else {
-    ctx.fillStyle = '#22c55e';
-    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(3, -6, 5, 5);
-  }
-  ctx.restore();
-}
-
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
-loop();
-</script>
-</body>
-</html>
+    if(
