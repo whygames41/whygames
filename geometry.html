@@ -238,7 +238,7 @@ const CUBE_SIZE = 34;
 
 const player = {
   x: 120, y: GROUND_Y - CUBE_SIZE, size: CUBE_SIZE,
-  vy: 0, gravity: 0.9, jumpForce: -13.5,
+  vy: 0, gravity: 0.92, jumpForce: -13.8,
   isGrounded: true, rotation: 0,
   skin: 'classic', stars: 20
 };
@@ -253,7 +253,7 @@ let trackLength = 3200;
 let gameOver = false;
 let isShopOpen = false;
 
-// Generate 20 Unique Level Layouts with Increasing Difficulty
+// 20 Stages Setup
 function initTrack(lvl) {
   obstacles = [];
   distance = 0;
@@ -263,56 +263,51 @@ function initTrack(lvl) {
   gameOver = false;
   document.getElementById('stageNum').innerText = lvl;
 
-  // Medium to Hard Progression Scaling
-  speed = 5.8 + (lvl * 0.22);
+  speed = 5.8 + (lvl * 0.2);
   trackLength = 2600 + (lvl * 250);
 
   let currentX = 550;
   while(currentX < trackLength) {
-    const gap = Math.max(160, 310 - (lvl * 6) + Math.random() * 80);
+    const gap = Math.max(170, 310 - (lvl * 5) + Math.random() * 70);
     currentX += gap;
-
-    // Obstacle types vary by level
     const rand = Math.random();
 
     if(lvl <= 5) {
-      // Levels 1-5: Intro to Medium Single and Double Spikes
-      if(rand < 0.6) {
-        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
+      if(rand < 0.65) {
+        obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
       } else {
         obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
       }
     } else if(lvl <= 12) {
-      // Levels 6-12: Double Spikes + Floating Mid-Air Blocks
-      if(rand < 0.4) {
-        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
-        obstacles.push({ x: currentX + 30, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
-      } else if(rand < 0.7) {
+      if(rand < 0.45) {
+        // Double spike
+        obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
+        obstacles.push({ x: currentX + 34, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
+      } else if(rand < 0.75) {
         obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
-        obstacles.push({ x: currentX + 80, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
+        obstacles.push({ x: currentX + 85, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
       } else {
-        obstacles.push({ x: currentX, y: GROUND_Y - 72, w: 60, h: 20, type: 'block' });
+        obstacles.push({ x: currentX, y: GROUND_Y - 70, w: 60, h: 22, type: 'block' });
       }
     } else {
-      // Levels 13-20: HARD Triple Spikes & Precise Beat Gaps
+      // Hard: Triple spikes & rapid rhythm
       if(rand < 0.45) {
-        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
-        obstacles.push({ x: currentX + 28, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
-        obstacles.push({ x: currentX + 56, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
+        obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
+        obstacles.push({ x: currentX + 34, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
+        obstacles.push({ x: currentX + 68, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
       } else if(rand < 0.8) {
         obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
         obstacles.push({ x: currentX + 34, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
-        obstacles.push({ x: currentX + 75, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
+        obstacles.push({ x: currentX + 75, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
       } else {
-        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
-        obstacles.push({ x: currentX + 65, y: GROUND_Y - 65, w: 40, h: 18, type: 'block' });
+        obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'spike' });
+        obstacles.push({ x: currentX + 65, y: GROUND_Y - 65, w: 45, h: 20, type: 'block' });
       }
     }
   }
 }
 initTrack(currentLevel);
 
-// Controls
 function jump() {
   if(audioCtx.state === 'suspended') audioCtx.resume();
   if(gameOver || isShopOpen) return;
@@ -436,7 +431,6 @@ function update() {
   player.vy += player.gravity;
   player.y += player.vy;
 
-  // Land on Floor
   if(player.y >= GROUND_Y - CUBE_SIZE) {
     player.y = GROUND_Y - CUBE_SIZE;
     player.vy = 0;
@@ -456,15 +450,15 @@ function update() {
   obstacles.forEach(obs => {
     obs.x -= speed;
 
-    // Tight Hitbox Detection: Spikes hit accurately
+    // Pixel-perfect Hitbox (Spikes are strictly ABOVE ground)
     const pLeft = player.x + 6;
     const pRight = player.x + player.size - 6;
-    const pTop = player.y + 6;
+    const pTop = player.y + 4;
     const pBottom = player.y + player.size;
 
-    const oLeft = obs.x + (obs.type === 'spike' ? 5 : 2);
-    const oRight = obs.x + obs.w - (obs.type === 'spike' ? 5 : 2);
-    const oTop = obs.y + (obs.type === 'spike' ? 6 : 2);
+    const oLeft = obs.x + 4;
+    const oRight = obs.x + obs.w - 4;
+    const oTop = obs.y + 4;
     const oBottom = obs.y + obs.h;
 
     if(pRight > oLeft && pLeft < oRight && pBottom > oTop && pTop < oBottom) {
@@ -503,12 +497,17 @@ function draw() {
   for(let x = -gridShift; x < 900; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke(); }
   for(let y = 0; y < 500; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke(); }
 
-  // Clean Floor Line (No sinking)
+  // Solid Floor (Under ground line)
   ctx.fillStyle = '#0f172a';
   ctx.fillRect(0, GROUND_Y, 900, 500 - GROUND_Y);
+
+  // Floor Edge Line
   ctx.strokeStyle = currentLevel > 12 ? '#ef4444' : '#00f2fe';
   ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(900, GROUND_Y); ctx.stroke();
+  ctx.beginPath(); 
+  ctx.moveTo(0, GROUND_Y); 
+  ctx.lineTo(900, GROUND_Y); 
+  ctx.stroke();
 
   // Progress Bar
   const progPct = Math.min(1, distance / trackLength);
@@ -522,20 +521,30 @@ function draw() {
     ctx.fillRect(p.x, p.y, 4, 4);
   });
 
-  // Obstacles Rendered strictly ABOVE ground
+  // Obstacles Rendered EXACTLY on top of GROUND_Y
   obstacles.forEach(obs => {
     if(obs.x > -60 && obs.x < 960) {
       if(obs.type === 'spike') {
+        // Neon Red Triangle resting perfectly on the floor
         ctx.fillStyle = '#ef4444';
         ctx.strokeStyle = '#fca5a5';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(obs.x, GROUND_Y);
-        ctx.lineTo(obs.x + obs.w / 2, obs.y);
+        ctx.lineTo(obs.x + (obs.w / 2), GROUND_Y - obs.h);
         ctx.lineTo(obs.x + obs.w, GROUND_Y);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+
+        // Inner glowing core
+        ctx.fillStyle = '#ff8888';
+        ctx.beginPath();
+        ctx.moveTo(obs.x + 6, GROUND_Y);
+        ctx.lineTo(obs.x + (obs.w / 2), GROUND_Y - obs.h + 8);
+        ctx.lineTo(obs.x + obs.w - 6, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
       } else {
         ctx.fillStyle = '#6366f1';
         ctx.strokeStyle = '#c7d2fe';
