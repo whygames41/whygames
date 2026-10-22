@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Stickman Legend: Championship - WHY GAMES</title>
+<title>Stickman Legend - WHY GAMES</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
   body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -54,26 +54,26 @@
   .btn-power { background: rgba(140, 30, 200, 0.8); border-color: #d155ff; }
   .btn-shop { background: rgba(30, 160, 80, 0.85); border-color: #44ee88; border-radius: 12px; width: 62px; }
 
-  /* Shop Modal */
-  #shopModal, #levelModal, #winModal {
+  /* Modals */
+  #shopModal, #levelModal, #winModal, #gameOverModal {
     display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 85%;
+    width: 88%;
     max-width: 480px;
-    background: rgba(15, 18, 28, 0.96);
+    background: rgba(15, 18, 28, 0.98);
     border: 2px solid #ffcc00;
     border-radius: 16px;
     padding: 20px;
     color: #fff;
     text-align: center;
-    box-shadow: 0 0 30px rgba(255, 204, 0, 0.4);
+    box-shadow: 0 0 35px rgba(255, 204, 0, 0.4);
     z-index: 100;
   }
 
-  .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
   .shop-item {
     background: #202436;
     border: 1px solid #454d6b;
@@ -81,8 +81,12 @@
     border-radius: 10px;
     font-size: 12px;
   }
+  .ad-item {
+    border: 1px solid #a855f7;
+    background: linear-gradient(135deg, #25123a, #1a162b);
+  }
   .shop-btn {
-    margin-top: 8px;
+    margin-top: 6px;
     padding: 6px;
     background: #ffaa00;
     border: none;
@@ -91,6 +95,11 @@
     color: #000;
     width: 100%;
     cursor: pointer;
+  }
+  .ad-btn {
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    color: #fff;
+    font-weight: bold;
   }
   .modal-btn {
     background: #22c55e;
@@ -128,30 +137,29 @@
 <!-- Shop Modal -->
 <div id="shopModal">
   <h2 style="color:#ffcc00; font-size:22px;">ARMORY STORE</h2>
-  <p style="font-size:12px; color:#aaa; margin-top:4px;">Buy guns, armor, and skins to survive higher levels!</p>
   <div class="shop-grid">
     <div class="shop-item">
       <h4>🔫 Combat Pistol</h4>
-      <p style="color:#ffcc00;">Cost: 35 Coins</p>
+      <p style="color:#ffcc00;">35 Coins</p>
       <button class="shop-btn" onclick="buyItem('pistol', 35)">Equip Pistol</button>
     </div>
     <div class="shop-item">
       <h4>⚡ Plasma Rifle</h4>
-      <p style="color:#ffcc00;">Cost: 80 Coins</p>
+      <p style="color:#ffcc00;">80 Coins</p>
       <button class="shop-btn" onclick="buyItem('rifle', 80)">Equip Rifle</button>
     </div>
-    <div class="shop-item">
-      <h4>🛡️ Titan Armor</h4>
-      <p style="color:#ffcc00;">Cost: 45 Coins</p>
-      <button class="shop-btn" onclick="buyItem('armor', 45)">Upgrade HP</button>
+    <div class="shop-item ad-item">
+      <h4 style="color:#c084fc;">💰 Free Coins</h4>
+      <p style="color:#4ade80;">+100 Coins</p>
+      <button class="shop-btn ad-btn" onclick="triggerSmartLinkAd('coins')">📺 Watch Ad</button>
     </div>
-    <div class="shop-item">
-      <h4>👑 Golden Skin</h4>
-      <p style="color:#ffcc00;">Cost: 60 Coins</p>
-      <button class="shop-btn" onclick="buyItem('gold', 60)">Equip Skin</button>
+    <div class="shop-item ad-item">
+      <h4 style="color:#00f2fe;">✨ Neon Skin</h4>
+      <p style="color:#4ade80;">VIP Skin</p>
+      <button class="shop-btn ad-btn" onclick="triggerSmartLinkAd('skin')">📺 Watch Ad</button>
     </div>
   </div>
-  <button class="modal-btn close-shop" onclick="toggleShop(false)">RESUME</button>
+  <button class="modal-btn close-shop" onclick="toggleShop(false)">RESUME GAME</button>
 </div>
 
 <!-- Level Complete Modal -->
@@ -159,6 +167,15 @@
   <h2 style="color:#22c55e; font-size:26px;">LEVEL CLEARED! 🎉</h2>
   <p style="margin: 10px 0; font-size:14px;" id="lvlClearDesc">Enemies Defeated! Stage bonus added.</p>
   <button class="modal-btn" onclick="nextLevel()">START NEXT LEVEL ➔</button>
+</div>
+
+<!-- Game Over Modal with Revive Option -->
+<div id="gameOverModal">
+  <h2 style="color:#ef4444; font-size:28px;">DEFEATED!</h2>
+  <p style="margin: 8px 0; font-size:14px; color:#cbd5e1;">Don't lose your progress! Watch an ad to continue.</p>
+  <button class="modal-btn" style="background:#a855f7; width:100%;" onclick="triggerSmartLinkAd('revive')">❤️ Watch Ad to Revive (Full HP)</button>
+  <br>
+  <button class="modal-btn close-shop" onclick="location.reload()">Restart Level 1</button>
 </div>
 
 <!-- Final Game Win Modal -->
@@ -171,6 +188,8 @@
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+
+const AD_SMARTLINK = "https://auctionr.org/4/0ecf866196856ac93826c721e0c25524";
 
 // Sound Generator
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -189,7 +208,6 @@ function playSound(freq, duration, type='sine') {
   } catch(e){}
 }
 
-// Level Environments Configuration
 const LEVEL_THEMES = [
   { name: "Cyber City", bgTop: "#0f172a", bgBot: "#1e1b4b", grid: "#312e81", floor: "#1e1b4b", floorEdge: "#38bdf8", orb: "#60a5fa" },
   { name: "Toxic Ruins", bgTop: "#022c22", bgBot: "#064e3b", grid: "#065f46", floor: "#064e3b", floorEdge: "#10b981", orb: "#34d399" },
@@ -205,7 +223,6 @@ const orbs = Array.from({length: 35}, () => ({
   speed: Math.random() * 0.4 + 0.2
 }));
 
-// Player Setup
 const player = {
   x: 120, y: 360, vx: 0, vy: 0, speed: 5,
   isGrounded: true, facing: 1,
@@ -224,7 +241,31 @@ let isShopOpen = false;
 let isLevelPaused = false;
 let gameOver = false;
 
-// Controls
+// Direct SmartLink Reward Trigger
+function triggerSmartLinkAd(rewardType) {
+  // Opens Adsterra revenue ad in a new tab
+  window.open(AD_SMARTLINK, '_blank');
+
+  // Rewards player in game
+  setTimeout(() => {
+    if (rewardType === "coins") {
+      player.coins += 100;
+      playSound(750, 0.25, 'sine');
+      alert("Reward Unlocked: +100 Gold Coins Added!");
+    } else if (rewardType === "skin") {
+      player.color = '#00f2fe';
+      playSound(800, 0.3, 'square');
+      alert("Reward Unlocked: Neon Cyan VIP Skin Equipped!");
+    } else if (rewardType === "revive") {
+      player.hp = player.maxHp;
+      gameOver = false;
+      document.getElementById('gameOverModal').style.display = 'none';
+      playSound(600, 0.3, 'triangle');
+      alert("Reward Unlocked: Revived with Full Health!");
+    }
+  }, 700);
+}
+
 const keys = { left: false, right: false };
 function setupTouch(id, onDown, onUp) {
   const el = document.getElementById(id);
@@ -256,11 +297,9 @@ function buyItem(type, cost) {
     playSound(600, 0.2, 'square');
     if(type === 'pistol') player.weapon = 'pistol';
     if(type === 'rifle') player.weapon = 'rifle';
-    if(type === 'armor') { player.armor += 1; player.maxHp += 30; player.hp = player.maxHp; }
-    if(type === 'gold') player.color = '#ffcc00';
     alert("Equipped!");
   } else {
-    alert("Need more coins!");
+    alert("Not enough coins! Watch an ad below to get +100 free coins.");
   }
 }
 
@@ -304,7 +343,6 @@ function playerAttack() {
   }
 }
 
-// Spawner based on level limits
 function initLevel(lvl) {
   enemies = [];
   bullets = [];
@@ -351,12 +389,11 @@ function nextLevel() {
   document.getElementById('levelModal').style.display = 'none';
   isLevelPaused = false;
   currentLevel++;
-  player.coins += 30; // Level reward
-  player.hp = player.maxHp; // Full heal between levels
+  player.coins += 30;
+  player.hp = player.maxHp;
   initLevel(currentLevel);
 }
 
-// Game Loop
 function update() {
   if(isShopOpen || isLevelPaused || gameOver) return;
 
@@ -373,7 +410,6 @@ function update() {
   if(player.muzzleFlash > 0) player.muzzleFlash--;
   if(player.energy < 100) player.energy += 0.25;
 
-  // Bullets
   bullets.forEach((b, bi) => {
     b.x += b.vx;
     enemies.forEach(e => {
@@ -385,7 +421,6 @@ function update() {
     });
   });
 
-  // Combat Melee / Beam
   enemies.forEach((e, ei) => {
     if(player.attackState === 'punch') {
       if(Math.abs(player.y - e.y) < 30 && (e.x - player.x) * player.facing > 0 && Math.abs(e.x - player.x) < 55) {
@@ -422,7 +457,6 @@ function update() {
     }
   });
 
-  // Coins
   coins.forEach((c, ci) => {
     if(Math.abs(player.x - c.x) < 30 && Math.abs(player.y - c.y) < 40) {
       player.coins += c.val;
@@ -431,7 +465,6 @@ function update() {
     }
   });
 
-  // Level Clear Detection
   if(enemies.length === 0) {
     if(currentLevel >= MAX_LEVELS) {
       document.getElementById('winModal').style.display = 'block';
@@ -444,26 +477,26 @@ function update() {
     }
   }
 
-  if(player.hp <= 0) gameOver = true;
+  if(player.hp <= 0 && !gameOver) {
+    gameOver = true;
+    document.getElementById('gameOverModal').style.display = 'block';
+  }
 }
 
 function draw() {
   const theme = LEVEL_THEMES[currentLevel - 1];
 
-  // Dynamic Background Gradient
   const grad = ctx.createLinearGradient(0, 0, 0, 500);
   grad.addColorStop(0, theme.bgTop);
   grad.addColorStop(1, theme.bgBot);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 900, 500);
 
-  // Dynamic Grid
   ctx.strokeStyle = theme.grid;
   ctx.lineWidth = 1;
   for(let x=0; x<900; x+=45) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke(); }
   for(let y=0; y<500; y+=45) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke(); }
 
-  // Theme Particles
   ctx.fillStyle = theme.orb;
   orbs.forEach(o => {
     o.y -= o.speed;
@@ -471,35 +504,29 @@ function draw() {
     ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI*2); ctx.fill();
   });
 
-  // Dynamic Platform
   ctx.fillStyle = theme.floor;
   ctx.fillRect(0, 410, 900, 90);
   ctx.strokeStyle = theme.floorEdge;
   ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(0, 410); ctx.lineTo(900, 410); ctx.stroke();
 
-  // Coins
   ctx.fillStyle = '#ffcc00';
   coins.forEach(c => {
     ctx.beginPath(); ctx.arc(c.x, c.y, 7, 0, Math.PI*2); ctx.fill();
   });
 
-  // Bullets
   bullets.forEach(b => {
     ctx.fillStyle = b.color;
     ctx.fillRect(b.x, b.y, 12, 4);
   });
 
-  // Player
   drawStickman(player.x, player.y, player.color, player.facing, player.attackState, player.armor > 0, 1, player.weapon, player.muzzleFlash);
 
-  // Enemies
   enemies.forEach(e => {
     const scale = e.isBoss ? (currentLevel === 5 ? 1.8 : 1.4) : 1;
     const col = e.isBoss ? '#f43f5e' : '#ef4444';
     drawStickman(e.x, e.y, col, e.x < player.x ? 1 : -1, null, false, scale, 'fists', 0);
     
-    // HP Bar
     const barW = 35 * scale;
     ctx.fillStyle = '#333';
     ctx.fillRect(e.x - barW/2, e.y - 30 * scale, barW, 5);
@@ -507,7 +534,6 @@ function draw() {
     ctx.fillRect(e.x - barW/2, e.y - 30 * scale, (e.hp / e.maxHp) * barW, 5);
   });
 
-  // Sparks
   particles.forEach((p, pi) => {
     p.x += p.vx; p.y += p.vy; p.life--;
     ctx.fillStyle = p.color;
@@ -515,7 +541,7 @@ function draw() {
     if(p.life <= 0) particles.splice(pi, 1);
   });
 
-  // HUD Elements
+  // HUD
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 15px Arial';
   ctx.fillText(`HP: ${Math.max(0, Math.floor(player.hp))}/${player.maxHp}`, 20, 30);
@@ -529,20 +555,8 @@ function draw() {
   ctx.fillText(`Coins: ${player.coins}`, 780, 30);
   ctx.fillStyle = theme.floorEdge;
   ctx.fillText(`Level ${currentLevel}: ${theme.name}`, 380, 30);
-
-  if(gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
-    ctx.fillRect(0,0,900,500);
-    ctx.fillStyle = '#ef4444';
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText("GAME OVER", 340, 240);
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#fff';
-    ctx.fillText("Tap refresh to retry the battle", 345, 275);
-  }
 }
 
-// Complete Stickman Drawer with Visual Guns
 function drawStickman(x, y, color, facing, attack, hasArmor, scale=1, weapon='fists', muzzle=0) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 3 * scale;
@@ -553,18 +567,15 @@ function drawStickman(x, y, color, facing, attack, hasArmor, scale=1, weapon='fi
     ctx.strokeStyle = color;
   }
 
-  // Head
   ctx.beginPath();
   ctx.arc(x, y - 10 * scale, 9 * scale, 0, Math.PI*2);
   ctx.stroke();
 
-  // Spine
   ctx.beginPath();
   ctx.moveTo(x, y - 1 * scale);
   ctx.lineTo(x, y + 26 * scale);
   ctx.stroke();
 
-  // Legs
   ctx.beginPath();
   ctx.moveTo(x, y + 26 * scale);
   ctx.lineTo(x - 9 * scale, y + 48 * scale);
@@ -572,19 +583,15 @@ function drawStickman(x, y, color, facing, attack, hasArmor, scale=1, weapon='fi
   ctx.lineTo(x + 9 * scale, y + 48 * scale);
   ctx.stroke();
 
-  // Arms & Weapons
-  ctx.beginPath();
   const shoulderY = y + 8 * scale;
   
   if(weapon !== 'fists') {
-    // Gun Stance
     const handX = x + (18 * facing * scale);
     const handY = shoulderY + 4;
     ctx.moveTo(x, shoulderY);
     ctx.lineTo(handX, handY);
     ctx.stroke();
 
-    // Render Gun
     if(weapon === 'pistol') {
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(handX, handY - 3, 14 * facing * scale, 6);
@@ -597,7 +604,6 @@ function drawStickman(x, y, color, facing, attack, hasArmor, scale=1, weapon='fi
       ctx.fillRect(handX + (6 * facing), handY - 2, 8 * facing, 3);
     }
 
-    // Muzzle Flash Effect
     if(muzzle > 0) {
       ctx.fillStyle = '#ffea00';
       ctx.beginPath();
@@ -612,13 +618,11 @@ function drawStickman(x, y, color, facing, attack, hasArmor, scale=1, weapon='fi
     ctx.moveTo(x, shoulderY);
     ctx.lineTo(x + (15 * facing * scale), shoulderY);
     ctx.stroke();
-    // Beam Graphic
     ctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
     const bx = facing === 1 ? x + 15 : 0;
     const bw = facing === 1 ? 900 - bx : x - 15;
     ctx.fillRect(bx, y, bw, 18);
   } else {
-    // Normal Idle Hands
     ctx.moveTo(x, shoulderY);
     ctx.lineTo(x - (8 * facing * scale), y + 20 * scale);
     ctx.moveTo(x, shoulderY);
