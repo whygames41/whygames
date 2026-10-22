@@ -513,4 +513,130 @@ function update() {
 
   particles.forEach((p, pi) => {
     p.x += p.vx; p.y += p.vy; p.life--;
-    if(
+    if(p.life <= 0) particles.splice(pi, 1);
+  });
+
+  // Stage Cleared Trigger
+  if(distance >= trackLength && !gameOver && !isStageClearOpen) {
+    isStageClearOpen = true;
+    player.stars += 15 + Math.floor(currentLevel * 1.5);
+    updateStarUI();
+
+    const nextLvlNum = currentLevel < 20 ? currentLevel + 1 : 20;
+    if(nextLvlNum > unlockedLevel) {
+      unlockedLevel = nextLvlNum;
+    }
+    saveProgress();
+
+    document.getElementById('clearMsg').innerText = `LEVEL ${currentLevel} CLEARED! ➔ LEVEL ${nextLvlNum} UNLOCKED`;
+    document.getElementById('stageClearModal').style.display = 'block';
+    playBeep(650, 'triangle', 0.25);
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#090a14';
+  ctx.fillRect(0, 0, 900, 500);
+
+  ctx.strokeStyle = currentLevel > 12 ? '#3b0764' : '#1e1b4b';
+  ctx.lineWidth = 1;
+  const gridShift = distance % 40;
+  for(let x = -gridShift; x < 900; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke(); }
+  for(let y = 0; y < 500; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke(); }
+
+  // Floor
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, GROUND_Y, 900, 500 - GROUND_Y);
+  ctx.strokeStyle = currentLevel > 12 ? '#ef4444' : '#00f2fe';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); 
+  ctx.moveTo(0, GROUND_Y); 
+  ctx.lineTo(900, GROUND_Y); 
+  ctx.stroke();
+
+  // Progress Bar
+  const progPct = Math.min(1, distance / trackLength);
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillRect(220, 16, 460, 8);
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(220, 16, 460 * progPct, 8);
+
+  particles.forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 4, 4);
+  });
+
+  // Obstacles
+  obstacles.forEach(obs => {
+    if(obs.x > -60 && obs.x < 960) {
+      if(obs.type === 'spike') {
+        ctx.fillStyle = '#ef4444';
+        ctx.strokeStyle = '#fca5a5';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(obs.x, GROUND_Y);
+        ctx.lineTo(obs.x + (obs.w / 2), GROUND_Y - obs.h);
+        ctx.lineTo(obs.x + obs.w, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#ff8888';
+        ctx.beginPath();
+        ctx.moveTo(obs.x + 6, GROUND_Y);
+        ctx.lineTo(obs.x + (obs.w / 2), GROUND_Y - obs.h + 8);
+        ctx.lineTo(obs.x + obs.w - 6, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#6366f1';
+        ctx.strokeStyle = '#c7d2fe';
+        ctx.lineWidth = 2;
+        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+        ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+      }
+    }
+  });
+
+  // Player Cube
+  ctx.save();
+  ctx.translate(player.x + player.size / 2, player.y + player.size / 2);
+  ctx.rotate(player.rotation);
+
+  if(player.skin === 'flame') {
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(3, -6, 5, 5);
+  } else if(player.skin === 'gold') {
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(3, -6, 5, 5);
+  } else {
+    ctx.fillStyle = '#22c55e';
+    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(3, -6, 5, 5);
+  }
+  ctx.restore();
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
