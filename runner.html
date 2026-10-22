@@ -1,1 +1,656 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Subway Neon Runner - WHY GAMES</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  body, html { width: 100%; height: 100%; overflow: hidden; background: #070913; font-family: 'Poppins', system-ui, sans-serif; }
+  #gameCanvas { display: block; width: 100vw; height: 100vh; object-fit: contain; }
+
+  .back-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(18, 20, 32, 0.85);
+    border: 1px solid #4a5568;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    text-decoration: none;
+    z-index: 50;
+  }
+
+  .top-hud {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    display: flex;
+    gap: 10px;
+    z-index: 50;
+  }
+  .hud-badge {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid #38bdf8;
+    color: #facc15;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+  .shop-btn-top {
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  /* Modals */
+  #shopModal, #gameOverModal {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 460px;
+    background: rgba(10, 12, 22, 0.98);
+    border: 2px solid #38bdf8;
+    border-radius: 18px;
+    padding: 22px;
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+    z-index: 100;
+  }
+
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+  .shop-card {
+    background: #171b2e;
+    border: 1px solid #334155;
+    padding: 10px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+  .legendary { border-color: #facc15; background: linear-gradient(135deg, #2a2010, #171b2e); }
+
+  .btn-action {
+    background: #38bdf8;
+    color: #000;
+    border: none;
+    padding: 7px;
+    width: 100%;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-top: 6px;
+    cursor: pointer;
+  }
+  .btn-ad {
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    color: #fff;
+  }
+
+  .modal-btn {
+    background: #22c55e;
+    border: none;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 15px;
+    margin-top: 10px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .close-btn { background: #ef4444; }
+
+  /* On-screen control helpers for touch/mobile */
+  .touch-controls {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 24px;
+    pointer-events: none;
+    z-index: 40;
+  }
+  .touch-col { display: flex; gap: 12px; pointer-events: auto; }
+  .ctrl-btn {
+    width: 58px;
+    height: 58px;
+    background: rgba(30, 41, 59, 0.7);
+    border: 2px solid rgba(56, 189, 248, 0.5);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ctrl-btn:active { background: rgba(56, 189, 248, 0.8); transform: scale(0.92); }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">⬅ WHY GAMES</a>
+
+<div class="top-hud">
+  <div class="hud-badge">SCORE: <span id="scoreDisplay">0</span></div>
+  <div class="hud-badge">🪙 <span id="coinDisplay">0</span></div>
+  <button class="shop-btn-top" onclick="toggleShop(true)">🛹 HOVERBOARDS</button>
+</div>
+
+<canvas id="gameCanvas" width="900" height="500"></canvas>
+
+<!-- Touch Controls for Easy Phone Play -->
+<div class="touch-controls">
+  <div class="touch-col">
+    <div class="ctrl-btn" id="btnLeft">◀</div>
+    <div class="ctrl-btn" id="btnRight">▶</div>
+  </div>
+  <div class="touch-col">
+    <div class="ctrl-btn" id="btnJump">⬆</div>
+    <div class="ctrl-btn" id="btnSlide">⬇</div>
+  </div>
+</div>
+
+<!-- Legendary Hoverboard Shop -->
+<div id="shopModal">
+  <h2 style="color:#facc15; font-size:20px;">LEGENDARY HOVERBOARD VAULT</h2>
+  <div class="shop-grid">
+    <div class="shop-card">
+      <div style="font-size:26px;">🛹</div>
+      <h4>Neon Rider</h4>
+      <p style="color:#38bdf8;">Standard</p>
+      <button class="btn-action" onclick="equipBoard('neon')">Equip</button>
+    </div>
+    <div class="shop-card legendary">
+      <div style="font-size:26px;">🔥</div>
+      <h4 style="color:#facc15;">Inferno Glider</h4>
+      <p style="color:#facc15;">100 Coins</p>
+      <button class="btn-action" onclick="buyBoard('inferno', 100)">Unlock</button>
+    </div>
+    <div class="shop-card legendary">
+      <div style="font-size:26px;">⚡</div>
+      <h4 style="color:#facc15;">Cyber Lightning</h4>
+      <p style="color:#4ade80;">VIP Reward</p>
+      <button class="btn-action btn-ad" onclick="watchAdReward('cyber_board')">📺 Unlock via Ad</button>
+    </div>
+    <div class="shop-card">
+      <div style="font-size:26px;">💰</div>
+      <h4>Gold Stash</h4>
+      <p style="color:#4ade80;">+150 Coins</p>
+      <button class="btn-action btn-ad" onclick="watchAdReward('coins')">📺 Free Coins</button>
+    </div>
+  </div>
+  <button class="modal-btn close-btn" onclick="toggleShop(false)">RESUME RUN</button>
+</div>
+
+<!-- Game Over Modal -->
+<div id="gameOverModal">
+  <h2 style="color:#ef4444; font-size:26px;">CAUGHT & CRASHED!</h2>
+  <p style="margin: 8px 0; font-size:14px; color:#94a3b8;" id="finalScoreText">Final Distance: 0m</p>
+  <button class="modal-btn" style="background:linear-gradient(135deg, #a855f7, #6366f1);" onclick="watchAdReward('revive')">⚡ Watch Ad to Revive Here</button>
+  <button class="modal-btn" onclick="restartGame()">Run Again</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const AD_SMARTLINK = "https://auctionr.org/4/0ecf866196856ac93826c721e0c25524";
+
+// Audio
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playFx(freq, duration=0.08, type='square') {
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e){}
+}
+
+// 3 Lane Positions (Perspective tracks)
+const LANES = [320, 450, 580];
+
+const player = {
+  lane: 1, // 0: Left, 1: Center, 2: Right
+  targetX: 450,
+  x: 450,
+  y: 380,
+  vy: 0,
+  gravity: 0.9,
+  jumpForce: -14,
+  isGrounded: true,
+  isSliding: false,
+  slideTimer: 0,
+  jetpackTimer: 0,
+  magnetTimer: 0,
+  board: localStorage.getItem('whygames_board') || 'neon',
+  coins: parseInt(localStorage.getItem('whygames_runner_coins')) || 0
+};
+
+let speed = 7;
+let score = 0;
+let obstacles = [];
+let pickups = [];
+let particles = [];
+let gameOver = false;
+let isShopOpen = false;
+
+function savePlayer() {
+  localStorage.setItem('whygames_runner_coins', player.coins);
+  localStorage.setItem('whygames_board', player.board);
+}
+
+// Spawner: Trains, Barriers, Coins & Powerups
+let spawnTimer = 0;
+function spawnWorld() {
+  spawnTimer++;
+  if(spawnTimer % 45 === 0) {
+    const lane = Math.floor(Math.random() * 3);
+    const rand = Math.random();
+
+    if(rand < 0.45) {
+      // Incoming Train (Big hazard)
+      obstacles.push({
+        lane, z: 1.0, type: 'train',
+        w: 90, h: 80, length: 220
+      });
+    } else if(rand < 0.8) {
+      // Low Barrier (Must Jump) or High Barrier (Must Slide)
+      const isHigh = Math.random() < 0.4;
+      obstacles.push({
+        lane, z: 1.0, type: isHigh ? 'high_bar' : 'low_bar',
+        w: 70, h: isHigh ? 38 : 34
+      });
+    } else {
+      // Powerup: Jetpack or Magnet
+      pickups.push({
+        lane, z: 1.0, type: Math.random() < 0.5 ? 'jetpack' : 'magnet'
+      });
+    }
+  }
+
+  // Floating Coins
+  if(spawnTimer % 20 === 0) {
+    const lane = Math.floor(Math.random() * 3);
+    for(let i=0; i<3; i++) {
+      pickups.push({ lane, z: 1.0 + (i * 0.08), type: 'coin' });
+    }
+  }
+}
+
+// Controls
+function moveLeft() {
+  if(player.lane > 0) { player.lane--; playFx(320, 0.05); }
+}
+function moveRight() {
+  if(player.lane < 2) { player.lane++; playFx(320, 0.05); }
+}
+function jump() {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  if(player.isGrounded && !player.isSliding) {
+    player.vy = player.jumpForce;
+    player.isGrounded = false;
+    playFx(480, 0.1, 'triangle');
+  }
+}
+function slide() {
+  if(!player.isSliding) {
+    player.isSliding = true;
+    player.slideTimer = 35;
+    if(!player.isGrounded) player.vy = 12; // Quick drop
+    playFx(220, 0.08, 'sawtooth');
+  }
+}
+
+// Touch listeners
+document.getElementById('btnLeft').onclick = moveLeft;
+document.getElementById('btnRight').onclick = moveRight;
+document.getElementById('btnJump').onclick = jump;
+document.getElementById('btnSlide').onclick = slide;
+
+// Swipe Support
+let touchStartX = 0;
+let touchStartY = 0;
+window.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, {passive:true});
+window.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if(Math.abs(dx) > Math.abs(dy)) {
+    if(dx > 35) moveRight();
+    else if(dx < -35) moveLeft();
+  } else {
+    if(dy < -35) jump();
+    else if(dy > 35) slide();
+  }
+}, {passive:true});
+
+// Keyboard
+window.addEventListener('keydown', (e) => {
+  if(e.code === 'ArrowLeft' || e.code === 'KeyA') moveLeft();
+  if(e.code === 'ArrowRight' || e.code === 'KeyD') moveRight();
+  if(e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') jump();
+  if(e.code === 'ArrowDown' || e.code === 'KeyS') slide();
+});
+
+function toggleShop(open) {
+  isShopOpen = open;
+  document.getElementById('shopModal').style.display = open ? 'block' : 'none';
+}
+function equipBoard(b) {
+  player.board = b;
+  savePlayer();
+  alert("Hoverboard Equipped!");
+}
+function buyBoard(b, cost) {
+  if(player.coins >= cost) {
+    player.coins -= cost;
+    player.board = b;
+    savePlayer();
+    updateHUD();
+    alert("Board Unlocked & Equipped!");
+  } else {
+    alert("Not enough coins! Watch an ad to get +150 Coins.");
+  }
+}
+function updateHUD() {
+  document.getElementById('scoreDisplay').innerText = Math.floor(score);
+  document.getElementById('coinDisplay').innerText = player.coins;
+}
+updateHUD();
+
+function watchAdReward(type) {
+  window.open(AD_SMARTLINK, '_blank');
+  setTimeout(() => {
+    if(type === 'coins') {
+      player.coins += 150;
+      updateHUD();
+      savePlayer();
+      alert("Reward Received: +150 Gold Coins!");
+    } else if(type === 'cyber_board') {
+      player.board = 'cyber';
+      savePlayer();
+      alert("Cyber Lightning Board Unlocked!");
+    } else if(type === 'revive') {
+      document.getElementById('gameOverModal').style.display = 'none';
+      obstacles = [];
+      gameOver = false;
+      alert("Revived with Super Boost!");
+    }
+  }, 700);
+}
+
+function restartGame() {
+  document.getElementById('gameOverModal').style.display = 'none';
+  obstacles = [];
+  pickups = [];
+  score = 0;
+  speed = 7;
+  player.lane = 1;
+  player.y = 380;
+  player.vy = 0;
+  gameOver = false;
+}
+
+function update() {
+  if(gameOver || isShopOpen) return;
+
+  score += 0.25;
+  speed = 7 + Math.min(6, score / 400);
+  updateHUD();
+
+  // Smooth lane interpolation
+  player.targetX = LANES[player.lane];
+  player.x += (player.targetX - player.x) * 0.22;
+
+  // Jump / Gravity
+  if(player.jetpackTimer > 0) {
+    player.jetpackTimer--;
+    player.y = 200; // Fly high safely
+    player.isGrounded = false;
+  } else {
+    player.vy += player.gravity;
+    player.y += player.vy;
+    if(player.y >= 380) {
+      player.y = 380;
+      player.vy = 0;
+      player.isGrounded = true;
+    }
+  }
+
+  // Slide timer
+  if(player.isSliding) {
+    player.slideTimer--;
+    if(player.slideTimer <= 0) player.isSliding = false;
+  }
+  if(player.magnetTimer > 0) player.magnetTimer--;
+
+  spawnWorld();
+
+  // Update Pickups
+  pickups.forEach((p, pi) => {
+    p.z -= speed * 0.0016;
+
+    // Magnet Attraction
+    if(player.magnetTimer > 0 && p.type === 'coin' && p.z < 0.45) {
+      p.lane = player.lane;
+    }
+
+    // Collect Item
+    if(p.z <= 0.08 && p.z >= -0.05 && p.lane === player.lane) {
+      if(p.type === 'coin') {
+        player.coins++;
+        savePlayer();
+        playFx(750, 0.05, 'sine');
+      } else if(p.type === 'jetpack') {
+        player.jetpackTimer = 320;
+        playFx(600, 0.3, 'sawtooth');
+      } else if(p.type === 'magnet') {
+        player.magnetTimer = 350;
+        playFx(520, 0.2, 'triangle');
+      }
+      pickups.splice(pi, 1);
+    }
+  });
+
+  // Update Obstacles & Collision
+  obstacles.forEach((obs, oi) => {
+    obs.z -= speed * 0.0016;
+
+    // Hitbox check
+    if(obs.z <= 0.08 && obs.z >= -0.06 && obs.lane === player.lane) {
+      if(player.jetpackTimer > 0) return; // Immune during jetpack
+
+      let isHit = false;
+      if(obs.type === 'train') {
+        // High impact crash
+        isHit = true;
+      } else if(obs.type === 'low_bar') {
+        // Must jump over
+        if(player.y > 330) isHit = true;
+      } else if(obs.type === 'high_bar') {
+        // Must slide under
+        if(!player.isSliding) isHit = true;
+      }
+
+      if(isHit) {
+        gameOver = true;
+        playFx(110, 0.25, 'sawtooth');
+        document.getElementById('finalScoreText').innerText = `Final Distance: ${Math.floor(score)}m | Coins: ${player.coins}`;
+        document.getElementById('gameOverModal').style.display = 'block';
+      }
+    }
+
+    if(obs.z < -0.1) obstacles.splice(oi, 1);
+  });
+}
+
+function draw() {
+  // Horizon Perspective Track
+  const grad = ctx.createLinearGradient(0, 0, 0, 500);
+  grad.addColorStop(0, '#0f172a');
+  grad.addColorStop(1, '#020617');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 900, 500);
+
+  // Perspective 3 Rail Tracks
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  const horizonY = 140;
+
+  // Track boundaries
+  const laneLines = [220, 350, 550, 680];
+  laneLines.forEach(lx => {
+    ctx.beginPath();
+    ctx.moveTo(450, horizonY);
+    ctx.lineTo(lx, 500);
+    ctx.stroke();
+  });
+
+  // Moving Track Ties
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  const tieOffset = (score * 8) % 40;
+  for(let y = horizonY + tieOffset; y < 500; y += 32) {
+    const widthFactor = (y - horizonY) / (500 - horizonY);
+    const startX = 450 - (230 * widthFactor);
+    const endX = 450 + (230 * widthFactor);
+    ctx.beginPath();
+    ctx.moveTo(startX, y);
+    ctx.lineTo(endX, y);
+    ctx.stroke();
+  }
+
+  // Draw Obstacles (3D depth scaling)
+  obstacles.forEach(obs => {
+    const depth = Math.max(0.05, 1 - obs.z);
+    const scale = 0.2 + (depth * 0.8);
+    const screenX = 450 + (LANES[obs.lane] - 450) * scale;
+    const screenY = horizonY + (380 - horizonY) * scale;
+
+    if(obs.type === 'train') {
+      // Bullet Subway Train
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(screenX - (45 * scale), screenY - (65 * scale), 90 * scale, 70 * scale);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(screenX - (30 * scale), screenY - (55 * scale), 20 * scale, 16 * scale);
+      ctx.fillRect(screenX + (10 * scale), screenY - (55 * scale), 20 * scale, 16 * scale);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(screenX - (40 * scale), screenY - (25 * scale), 80 * scale, 12 * scale);
+    } else if(obs.type === 'low_bar') {
+      ctx.fillStyle = '#f97316';
+      ctx.fillRect(screenX - (35 * scale), screenY - (28 * scale), 70 * scale, 28 * scale);
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(screenX - (35 * scale), screenY - (28 * scale), 70 * scale, 28 * scale);
+    } else if(obs.type === 'high_bar') {
+      ctx.fillStyle = '#e11d48';
+      ctx.fillRect(screenX - (35 * scale), screenY - (60 * scale), 70 * scale, 30 * scale);
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(screenX - (35 * scale), screenY - (60 * scale), 70 * scale, 30 * scale);
+    }
+  });
+
+  // Draw Pickups (Coins / Magnets / Jetpacks)
+  pickups.forEach(p => {
+    const depth = Math.max(0.05, 1 - p.z);
+    const scale = 0.2 + (depth * 0.8);
+    const screenX = 450 + (LANES[p.lane] - 450) * scale;
+    const screenY = horizonY + (370 - horizonY) * scale;
+
+    if(p.type === 'coin') {
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, 12 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ca8a04';
+      ctx.stroke();
+    } else if(p.type === 'jetpack') {
+      ctx.fillStyle = '#06b6d4';
+      ctx.fillRect(screenX - (12 * scale), screenY - (18 * scale), 24 * scale, 26 * scale);
+    } else if(p.type === 'magnet') {
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(screenX - (12 * scale), screenY - (14 * scale), 24 * scale, 16 * scale);
+    }
+  });
+
+  // Draw Player Runner
+  drawPlayer();
+}
+
+function drawPlayer() {
+  const isCrouch = player.isSliding;
+  const h = isCrouch ? 28 : 56;
+  const w = 24;
+
+  // Hoverboard Deck
+  ctx.save();
+  ctx.translate(player.x, player.y + 6);
+
+  if(player.board === 'inferno') {
+    ctx.fillStyle = '#ea580c';
+    ctx.shadowColor = '#f97316';
+    ctx.shadowBlur = 15;
+  } else if(player.board === 'cyber') {
+    ctx.fillStyle = '#00f2fe';
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 18;
+  } else {
+    ctx.fillStyle = '#ec4899';
+    ctx.shadowColor = '#f43f5e';
+    ctx.shadowBlur = 10;
+  }
+  ctx.fillRect(-28, 0, 56, 8);
+  ctx.restore();
+
+  // Body
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(player.x - (w / 2), player.y - h, w, h);
+
+  // Head / Cap
+  ctx.fillStyle = '#f8fafc';
+  ctx.beginPath();
+  ctx.arc(player.x, player.y - h - 8, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Jetpack Thruster Flames
+  if(player.jetpackTimer > 0) {
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(player.x - 16, player.y - 42, 6, 26);
+    ctx.fillRect(player.x + 10, player.y - 42, 6, 26);
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(player.x - 14, player.y - 16, 4, 14);
+    ctx.fillRect(player.x + 12, player.y - 16, 4, 14);
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
