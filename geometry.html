@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Geometry Neon Dash Lite - WHY GAMES</title>
+<title>Geometry Neon Dash: 20 Stages - WHY GAMES</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-  body, html { width: 100%; height: 100%; overflow: hidden; background: #05050d; font-family: 'Poppins', sans-serif; }
+  body, html { width: 100%; height: 100%; overflow: hidden; background: #05050d; font-family: 'Poppins', system-ui, sans-serif; }
   #gameCanvas { display: block; width: 100vw; height: 100vh; object-fit: contain; }
 
   .back-btn {
@@ -29,13 +29,22 @@
     top: 12px;
     right: 14px;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     z-index: 50;
   }
   .hud-badge {
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.9);
     border: 1px solid #38bdf8;
     color: #facc15;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+  .hud-stage {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid #a855f7;
+    color: #38bdf8;
     font-size: 13px;
     font-weight: 800;
     padding: 6px 12px;
@@ -53,15 +62,15 @@
   }
 
   /* Modals */
-  #shopModal, #gameOverModal, #winModal {
+  #shopModal, #gameOverModal, #stageClearModal, #stageSelectModal {
     display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 88%;
+    width: 90%;
     max-width: 480px;
-    background: rgba(10, 12, 22, 0.96);
+    background: rgba(10, 12, 22, 0.98);
     border: 2px solid #a855f7;
     border-radius: 18px;
     padding: 20px;
@@ -80,7 +89,28 @@
     font-size: 12px;
   }
   .legendary { border-color: #facc15; background: linear-gradient(135deg, #2a2010, #171b2e); }
-  
+
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .lvl-btn {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #fff;
+    padding: 10px 0;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .lvl-btn.active { border-color: #38bdf8; color: #38bdf8; }
+  .lvl-btn.locked { opacity: 0.4; cursor: not-allowed; }
+
   .btn-action {
     background: #38bdf8;
     color: #000;
@@ -110,6 +140,7 @@
     width: 100%;
   }
   .close-btn { background: #ef4444; }
+  .select-lvl-btn { background: #3b82f6; }
 </style>
 </head>
 <body>
@@ -117,7 +148,8 @@
 <a href="index.html" class="back-btn">⬅ WHY GAMES</a>
 
 <div class="top-hud">
-  <div class="hud-badge">⭐ <span id="starCounter">0</span></div>
+  <div class="hud-stage" onclick="openLevelSelect()" style="cursor:pointer;">LEVEL <span id="stageNum">1</span>/20 ▾</div>
+  <div class="hud-badge">⭐ <span id="starCounter">20</span></div>
   <button class="shop-btn-top" onclick="toggleShop(true)">🛍️ SKINS</button>
 </div>
 
@@ -136,8 +168,8 @@
     <div class="shop-card legendary">
       <div style="font-size:24px;">🔥</div>
       <h4 style="color:#facc15;">Flame Demon</h4>
-      <p style="color:#facc15;">25 Stars</p>
-      <button class="btn-action" onclick="buySkin('flame', 25)">Unlock</button>
+      <p style="color:#facc15;">30 Stars</p>
+      <button class="btn-action" onclick="buySkin('flame', 30)">Unlock</button>
     </div>
     <div class="shop-card legendary">
       <div style="font-size:24px;">👑</div>
@@ -155,19 +187,27 @@
   <button class="modal-btn close-btn" onclick="toggleShop(false)">RESUME RUN</button>
 </div>
 
+<!-- Level Select Modal -->
+<div id="stageSelectModal">
+  <h2 style="color:#38bdf8; font-size:20px;">SELECT LEVEL (1 - 20)</h2>
+  <div class="level-grid" id="levelContainer"></div>
+  <button class="modal-btn close-btn" onclick="document.getElementById('stageSelectModal').style.display='none'">CLOSE</button>
+</div>
+
 <!-- Game Over -->
 <div id="gameOverModal">
   <h2 style="color:#ef4444; font-size:26px;">CRASHED!</h2>
   <p style="margin: 8px 0; font-size:13px; color:#94a3b8;" id="progressPercent">Attempt: 45% Cleared</p>
-  <button class="modal-btn" style="background:linear-gradient(135deg, #a855f7, #6366f1);" onclick="watchAdReward('revive')">⚡ Watch Ad to Revive</button>
-  <button class="modal-btn" onclick="restartLevel()">Try Again (Tap Screen)</button>
+  <button class="modal-btn" style="background:linear-gradient(135deg, #a855f7, #6366f1);" onclick="watchAdReward('revive')">⚡ Watch Ad to Revive Here</button>
+  <button class="modal-btn" onclick="restartLevel()">Try Again</button>
+  <button class="modal-btn select-lvl-btn" onclick="openLevelSelect()">Choose Level</button>
 </div>
 
-<!-- Victory -->
-<div id="winModal">
-  <h2 style="color:#facc15; font-size:28px;">🏆 100% COMPLETE! 🏆</h2>
-  <p style="margin: 10px 0; font-size:14px;">You dominated Geometry Neon Dash!</p>
-  <button class="modal-btn" onclick="restartLevel()">PLAY AGAIN</button>
+<!-- Stage Clear -->
+<div id="stageClearModal">
+  <h2 style="color:#22c55e; font-size:26px;">STAGE CLEARED! 🎉</h2>
+  <p style="margin: 10px 0; font-size:14px;" id="clearMsg">Level 1 Complete! +15 Stars Earned.</p>
+  <button class="modal-btn" onclick="nextStage()">NEXT LEVEL ➔</button>
 </div>
 
 <script>
@@ -176,7 +216,7 @@ const ctx = canvas.getContext('2d');
 
 const AD_SMARTLINK = "https://auctionr.org/4/0ecf866196856ac93826c721e0c25524";
 
-// Audio Synthesis
+// Audio
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playBeep(freq, type='square', duration=0.08) {
   try {
@@ -193,53 +233,89 @@ function playBeep(freq, type='square', duration=0.08) {
   } catch(e){}
 }
 
+const GROUND_Y = 380;
+const CUBE_SIZE = 34;
+
 const player = {
-  x: 100, y: 360, size: 36,
-  vy: 0, gravity: 0.85, jumpForce: -13,
+  x: 120, y: GROUND_Y - CUBE_SIZE, size: CUBE_SIZE,
+  vy: 0, gravity: 0.9, jumpForce: -13.5,
   isGrounded: true, rotation: 0,
   skin: 'classic', stars: 20
 };
 
+let currentLevel = 1;
+let unlockedLevel = 20;
 let obstacles = [];
 let particles = [];
 let speed = 6;
 let distance = 0;
-const TRACK_LENGTH = 5200;
+let trackLength = 3200;
 let gameOver = false;
-let gameWon = false;
 let isShopOpen = false;
 
-// Generate Procedural Dash Track
-function initTrack() {
+// Generate 20 Unique Level Layouts with Increasing Difficulty
+function initTrack(lvl) {
   obstacles = [];
   distance = 0;
-  player.y = 360;
+  player.y = GROUND_Y - CUBE_SIZE;
   player.vy = 0;
   player.rotation = 0;
   gameOver = false;
-  gameWon = false;
+  document.getElementById('stageNum').innerText = lvl;
 
-  for(let x = 600; x < TRACK_LENGTH; x += 180 + Math.random() * 200) {
-    const typeRand = Math.random();
-    if(typeRand < 0.5) {
-      // Single Spike
-      obstacles.push({ x, y: 396, w: 32, h: 32, type: 'spike' });
-    } else if(typeRand < 0.8) {
-      // Double Spike
-      obstacles.push({ x, y: 396, w: 32, h: 32, type: 'spike' });
-      obstacles.push({ x: x + 34, y: 396, w: 32, h: 32, type: 'spike' });
+  // Medium to Hard Progression Scaling
+  speed = 5.8 + (lvl * 0.22);
+  trackLength = 2600 + (lvl * 250);
+
+  let currentX = 550;
+  while(currentX < trackLength) {
+    const gap = Math.max(160, 310 - (lvl * 6) + Math.random() * 80);
+    currentX += gap;
+
+    // Obstacle types vary by level
+    const rand = Math.random();
+
+    if(lvl <= 5) {
+      // Levels 1-5: Intro to Medium Single and Double Spikes
+      if(rand < 0.6) {
+        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
+      } else {
+        obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
+      }
+    } else if(lvl <= 12) {
+      // Levels 6-12: Double Spikes + Floating Mid-Air Blocks
+      if(rand < 0.4) {
+        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
+        obstacles.push({ x: currentX + 30, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
+      } else if(rand < 0.7) {
+        obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
+        obstacles.push({ x: currentX + 80, y: GROUND_Y - 32, w: 30, h: 32, type: 'spike' });
+      } else {
+        obstacles.push({ x: currentX, y: GROUND_Y - 72, w: 60, h: 20, type: 'block' });
+      }
     } else {
-      // Solid Block
-      obstacles.push({ x, y: 364, w: 36, h: 36, type: 'block' });
+      // Levels 13-20: HARD Triple Spikes & Precise Beat Gaps
+      if(rand < 0.45) {
+        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
+        obstacles.push({ x: currentX + 28, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
+        obstacles.push({ x: currentX + 56, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
+      } else if(rand < 0.8) {
+        obstacles.push({ x: currentX, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
+        obstacles.push({ x: currentX + 34, y: GROUND_Y - 34, w: 34, h: 34, type: 'block' });
+        obstacles.push({ x: currentX + 75, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
+      } else {
+        obstacles.push({ x: currentX, y: GROUND_Y - 32, w: 28, h: 32, type: 'spike' });
+        obstacles.push({ x: currentX + 65, y: GROUND_Y - 65, w: 40, h: 18, type: 'block' });
+      }
     }
   }
 }
-initTrack();
+initTrack(currentLevel);
 
 // Controls
 function jump() {
   if(audioCtx.state === 'suspended') audioCtx.resume();
-  if(gameOver || isShopOpen || gameWon) return;
+  if(gameOver || isShopOpen) return;
 
   if(player.isGrounded) {
     player.vy = player.jumpForce;
@@ -250,12 +326,12 @@ function jump() {
 
 window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
 window.addEventListener('touchstart', (e) => {
-  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal')) {
+  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal') && !e.target.closest('#stageSelectModal') && !e.target.closest('#stageClearModal')) {
     jump();
   }
 });
 window.addEventListener('mousedown', (e) => {
-  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal')) {
+  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal') && !e.target.closest('#stageSelectModal') && !e.target.closest('#stageClearModal')) {
     jump();
   }
 });
@@ -285,6 +361,41 @@ function updateStarUI() {
   document.getElementById('starCounter').innerText = player.stars;
 }
 
+function openLevelSelect() {
+  const container = document.getElementById('levelContainer');
+  container.innerHTML = '';
+  for(let i=1; i<=20; i++) {
+    const btn = document.createElement('button');
+    btn.className = `lvl-btn ${i === currentLevel ? 'active' : ''} ${i > unlockedLevel ? 'locked' : ''}`;
+    btn.innerText = i;
+    btn.onclick = () => {
+      if(i <= unlockedLevel) {
+        currentLevel = i;
+        document.getElementById('stageSelectModal').style.display = 'none';
+        document.getElementById('gameOverModal').style.display = 'none';
+        initTrack(currentLevel);
+      }
+    };
+    container.appendChild(btn);
+  }
+  document.getElementById('stageSelectModal').style.display = 'block';
+}
+
+function nextStage() {
+  document.getElementById('stageClearModal').style.display = 'none';
+  if(currentLevel < 20) {
+    currentLevel++;
+    unlockedLevel = Math.max(unlockedLevel, currentLevel);
+  }
+  initTrack(currentLevel);
+}
+
+function restartLevel() {
+  document.getElementById('gameOverModal').style.display = 'none';
+  document.getElementById('stageClearModal').style.display = 'none';
+  initTrack(currentLevel);
+}
+
 function watchAdReward(type) {
   window.open(AD_SMARTLINK, '_blank');
   setTimeout(() => {
@@ -297,7 +408,7 @@ function watchAdReward(type) {
       alert("Legendary Golden Matrix Skin Unlocked!");
     } else if(type === 'revive') {
       document.getElementById('gameOverModal').style.display = 'none';
-      player.y = 360;
+      player.y = GROUND_Y - CUBE_SIZE;
       player.vy = 0;
       gameOver = false;
       alert("Revived!");
@@ -305,14 +416,8 @@ function watchAdReward(type) {
   }, 700);
 }
 
-function restartLevel() {
-  document.getElementById('gameOverModal').style.display = 'none';
-  document.getElementById('winModal').style.display = 'none';
-  initTrack();
-}
-
 function spawnSparks(x, y, color) {
-  for(let i=0; i<8; i++) {
+  for(let i=0; i<10; i++) {
     particles.push({
       x, y,
       vx: (Math.random() - 0.5) * 8,
@@ -323,21 +428,22 @@ function spawnSparks(x, y, color) {
 }
 
 function update() {
-  if(gameOver || isShopOpen || gameWon) return;
+  if(gameOver || isShopOpen || document.getElementById('stageClearModal').style.display === 'block') return;
 
   distance += speed;
 
-  // Physics
+  // Jump physics
   player.vy += player.gravity;
   player.y += player.vy;
 
-  if(player.y >= 360) {
-    player.y = 360;
+  // Land on Floor
+  if(player.y >= GROUND_Y - CUBE_SIZE) {
+    player.y = GROUND_Y - CUBE_SIZE;
     player.vy = 0;
     player.isGrounded = true;
     player.rotation = Math.round(player.rotation / (Math.PI / 2)) * (Math.PI / 2);
   } else {
-    player.rotation += 0.12;
+    player.rotation += 0.13;
   }
 
   // Particle Trail
@@ -350,82 +456,89 @@ function update() {
   obstacles.forEach(obs => {
     obs.x -= speed;
 
-    // AABB Check
-    if(player.x + player.size - 6 > obs.x && player.x + 6 < obs.x + obs.w &&
-       player.y + player.size - 4 > obs.y && player.y + 4 < obs.y + obs.h) {
-      
+    // Tight Hitbox Detection: Spikes hit accurately
+    const pLeft = player.x + 6;
+    const pRight = player.x + player.size - 6;
+    const pTop = player.y + 6;
+    const pBottom = player.y + player.size;
+
+    const oLeft = obs.x + (obs.type === 'spike' ? 5 : 2);
+    const oRight = obs.x + obs.w - (obs.type === 'spike' ? 5 : 2);
+    const oTop = obs.y + (obs.type === 'spike' ? 6 : 2);
+    const oBottom = obs.y + obs.h;
+
+    if(pRight > oLeft && pLeft < oRight && pBottom > oTop && pTop < oBottom) {
       playBeep(120, 'sawtooth', 0.2);
       spawnSparks(player.x + 18, player.y + 18, '#ff3b3b');
       gameOver = true;
-      const pct = Math.min(99, Math.floor((distance / TRACK_LENGTH) * 100));
-      document.getElementById('progressPercent').innerText = `Attempt: ${pct}% Cleared`;
+      const pct = Math.min(99, Math.floor((distance / trackLength) * 100));
+      document.getElementById('progressPercent').innerText = `Stage ${currentLevel}: ${pct}% Cleared`;
       document.getElementById('gameOverModal').style.display = 'block';
     }
   });
 
-  // Particles Lifecycle
+  // Particles
   particles.forEach((p, pi) => {
     p.x += p.vx; p.y += p.vy; p.life--;
     if(p.life <= 0) particles.splice(pi, 1);
   });
 
-  // Check Track Completion
-  if(distance >= TRACK_LENGTH && !gameWon) {
-    gameWon = true;
-    player.stars += 30;
+  // Stage Clear Condition
+  if(distance >= trackLength && !gameOver) {
+    player.stars += 15 + Math.floor(currentLevel * 1.5);
     updateStarUI();
-    document.getElementById('winModal').style.display = 'block';
+    document.getElementById('clearMsg').innerText = `Level ${currentLevel} Complete! +${15 + Math.floor(currentLevel * 1.5)} Stars.`;
+    document.getElementById('stageClearModal').style.display = 'block';
   }
 }
 
 function draw() {
-  // Pulsing Neon Grid Background
   ctx.fillStyle = '#090a14';
   ctx.fillRect(0, 0, 900, 500);
 
-  ctx.strokeStyle = '#1e1b4b';
+  // Dynamic Grid shifts by stage
+  ctx.strokeStyle = currentLevel > 12 ? '#3b0764' : '#1e1b4b';
   ctx.lineWidth = 1;
   const gridShift = distance % 40;
   for(let x = -gridShift; x < 900; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke(); }
   for(let y = 0; y < 500; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke(); }
 
-  // Ground Line
+  // Clean Floor Line (No sinking)
   ctx.fillStyle = '#0f172a';
-  ctx.fillRect(0, 396, 900, 104);
-  ctx.strokeStyle = '#00f2fe';
+  ctx.fillRect(0, GROUND_Y, 900, 500 - GROUND_Y);
+  ctx.strokeStyle = currentLevel > 12 ? '#ef4444' : '#00f2fe';
   ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(0, 396); ctx.lineTo(900, 396); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(900, GROUND_Y); ctx.stroke();
 
   // Progress Bar
-  const progPct = Math.min(1, distance / TRACK_LENGTH);
+  const progPct = Math.min(1, distance / trackLength);
   ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.fillRect(200, 16, 500, 8);
+  ctx.fillRect(220, 16, 460, 8);
   ctx.fillStyle = '#22c55e';
-  ctx.fillRect(200, 16, 500 * progPct, 8);
+  ctx.fillRect(220, 16, 460 * progPct, 8);
 
-  // Particles
   particles.forEach(p => {
     ctx.fillStyle = p.color;
     ctx.fillRect(p.x, p.y, 4, 4);
   });
 
-  // Obstacles
+  // Obstacles Rendered strictly ABOVE ground
   obstacles.forEach(obs => {
-    if(obs.x > -50 && obs.x < 950) {
+    if(obs.x > -60 && obs.x < 960) {
       if(obs.type === 'spike') {
         ctx.fillStyle = '#ef4444';
-        ctx.strokeStyle = '#f87171';
+        ctx.strokeStyle = '#fca5a5';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(obs.x, obs.y + obs.h);
+        ctx.moveTo(obs.x, GROUND_Y);
         ctx.lineTo(obs.x + obs.w / 2, obs.y);
-        ctx.lineTo(obs.x + obs.w, obs.y + obs.h);
+        ctx.lineTo(obs.x + obs.w, GROUND_Y);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
       } else {
         ctx.fillStyle = '#6366f1';
-        ctx.strokeStyle = '#a5b4fc';
+        ctx.strokeStyle = '#c7d2fe';
         ctx.lineWidth = 2;
         ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
         ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
@@ -445,7 +558,7 @@ function draw() {
     ctx.lineWidth = 3;
     ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
     ctx.fillStyle = '#000';
-    ctx.fillRect(4, -8, 6, 6);
+    ctx.fillRect(3, -6, 5, 5);
   } else if(player.skin === 'gold') {
     ctx.fillStyle = '#facc15';
     ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
@@ -453,7 +566,7 @@ function draw() {
     ctx.lineWidth = 3;
     ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
     ctx.fillStyle = '#78350f';
-    ctx.fillRect(4, -8, 6, 6);
+    ctx.fillRect(3, -6, 5, 5);
   } else {
     ctx.fillStyle = '#22c55e';
     ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
@@ -461,7 +574,7 @@ function draw() {
     ctx.lineWidth = 3;
     ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
     ctx.fillStyle = '#000';
-    ctx.fillRect(4, -8, 6, 6);
+    ctx.fillRect(3, -6, 5, 5);
   }
   ctx.restore();
 }
