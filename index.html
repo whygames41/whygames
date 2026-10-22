@@ -17,47 +17,96 @@
     align-items: center;
   }
 
+  /* Header with Rocket Logo */
   header {
     width: 100%;
     background: rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 22px 20px;
-    text-align: center;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
-  .logo-box {
-    display: inline-flex;
+  .header-brand {
+    display: flex;
     align-items: center;
-    gap: 10px;
-    background: linear-gradient(90deg, #ff007f, #7928ca);
-    padding: 6px 18px;
-    border-radius: 30px;
-    box-shadow: 0 0 20px rgba(255, 0, 127, 0.5);
+    gap: 14px;
+    text-decoration: none;
   }
 
-  h1 {
+  .rocket-logo-wrapper {
+    position: relative;
+    width: 65px;
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Glowing Thruster Rocket Beam Effect */
+  .rocket-logo-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    width: 28px;
+    height: 38px;
+    background: radial-gradient(ellipse at top, #00f2fe 10%, #7928ca 60%, transparent 80%);
+    filter: blur(6px);
+    border-radius: 50%;
+    z-index: 1;
+    animation: thrusterPulse 0.8s infinite alternate ease-in-out;
+  }
+
+  @keyframes thrusterPulse {
+    0% { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(1.3) translateY(4px); opacity: 1; }
+  }
+
+  .rocket-logo-img {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #00f2fe;
+    box-shadow: 0 0 18px rgba(0, 242, 254, 0.7), inset 0 0 10px rgba(121, 40, 202, 0.5);
+    position: relative;
+    z-index: 2;
+    animation: floatRocket 2.2s infinite ease-in-out;
+  }
+
+  @keyframes floatRocket {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .logo-text-box h1 {
     font-size: 26px;
     font-weight: 900;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #ffffff;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(90deg, #ff007f, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    line-height: 1.1;
   }
 
   p.tagline {
     color: #e0d4fc;
     font-size: 13px;
-    margin-top: 10px;
-    font-weight: 500;
+    margin-top: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
   }
 
   .container {
     width: 90%;
     max-width: 960px;
-    margin-top: 35px;
+    margin-top: 30px;
   }
 
   .section-title {
@@ -74,17 +123,19 @@
 
   .game-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
   }
 
   .game-card {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
     overflow: hidden;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
     transition: transform 0.25s ease, border-color 0.25s ease;
+    display: flex;
+    flex-direction: column;
   }
 
   .game-card:hover {
@@ -93,26 +144,31 @@
   }
 
   .card-banner {
-    height: 140px;
-    background: linear-gradient(135deg, #ff007f, #4facfe);
+    height: 150px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
-    text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    font-size: 52px;
+    text-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    position: relative;
   }
 
   .card-body {
-    padding: 20px;
+    padding: 18px;
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
   }
 
   .badge {
+    align-self: flex-start;
     display: inline-block;
-    background: rgba(0, 242, 254, 0.2);
+    background: rgba(0, 242, 254, 0.18);
     color: #00f2fe;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     padding: 4px 10px;
     border-radius: 20px;
     margin-bottom: 10px;
@@ -121,7 +177,7 @@
 
   .card-title {
     font-size: 20px;
-    font-weight: 800;
+    font-weight: 900;
     color: #ffffff;
     margin-bottom: 6px;
   }
@@ -129,8 +185,9 @@
   .card-desc {
     font-size: 13px;
     color: #c4b5fd;
-    line-height: 1.5;
-    margin-bottom: 20px;
+    line-height: 1.45;
+    margin-bottom: 18px;
+    flex-grow: 1;
   }
 
   .btn-group {
@@ -140,20 +197,24 @@
 
   .btn {
     flex: 1;
-    padding: 12px 0;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 13px;
+    padding: 14px 0;
+    border-radius: 14px;
+    font-weight: 900;
+    font-size: 15px;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
     transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
 
   .btn-play {
     background: linear-gradient(135deg, #00f2fe, #4facfe);
     color: #040d21;
-    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+    box-shadow: 0 4px 16px rgba(0, 242, 254, 0.5);
   }
 
   .btn-play:active {
@@ -164,6 +225,7 @@
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 13px;
   }
 
   .btn-apk:active {
@@ -180,40 +242,49 @@
 <body>
 
 <header>
-  <div class="logo-box">
-    <h1>WHY GAMES</h1>
+  <div class="header-brand">
+    <div class="rocket-logo-wrapper">
+      <img src="https://static.vecteezy.com/system/resources/previews/010/314/620/non_2x/rockets-esport-mascot-logo-design-vector.jpg" alt="WHY GAMES Rocket Logo" class="rocket-logo-img">
+    </div>
+    <div class="logo-text-box">
+      <h1>WHY GAMES</h1>
+    </div>
   </div>
-  <p class="tagline">⚡ Next-Gen Free Web Games & Mobile APKs</p>
+  <p class="tagline">🚀 PLAY FREE ARCADE GAMES ONLINE</p>
 </header>
 
 <div class="container">
-  <div class="section-title">🔥 Featured Releases</div>
+  <div class="section-title">🔥 Featured Games</div>
   
   <div class="game-grid">
     
     <!-- Stickman Legend Card -->
     <div class="game-card">
-      <div class="card-banner">🥊⚡</div>
+      <div class="card-banner" style="background: linear-gradient(135deg, #ff007f, #7928ca);">
+        🥊⚡
+      </div>
       <div class="card-body">
         <span class="badge">ACTION / FIGHTING</span>
         <div class="card-title">Stickman Legend</div>
-        <div class="card-desc">Fight waves of enemies, defeat massive bosses, collect gold coins, and unlock plasma rifles in the armory!</div>
+        <div class="card-desc">Fight enemies, defeat bosses, use laser beam powers and armory weapons!</div>
         <div class="btn-group">
-          <a href="stickman.html" class="btn btn-play">Play Now</a>
-          <a href="https://drive.google.com/uc?export=download&id=1zsgDeRAosCyBrY-0mjMCS7kwgocXlGi5" target="_blank" class="btn btn-apk">Get APK</a>
+          <a href="stickman.html" class="btn btn-play">▶ PLAY</a>
+          <a href="https://drive.google.com/uc?export=download&id=1zsgDeRAosCyBrY-0mjMCS7kwgocXlGi5" target="_blank" class="btn btn-apk">APK</a>
         </div>
       </div>
     </div>
 
     <!-- Geometry Neon Dash Card -->
     <div class="game-card">
-      <div class="card-banner" style="background: linear-gradient(135deg, #a855f7, #38bdf8);">⚡🔷</div>
+      <div class="card-banner" style="background: linear-gradient(135deg, #a855f7, #00f2fe);">
+        ⚡🔷
+      </div>
       <div class="card-body">
-        <span class="badge" style="color:#facc15; border-color:#facc15;">RHYTHM / ARCADE</span>
+        <span class="badge" style="color:#facc15; border-color:#facc15;">20 LEVELS / RHYTHM</span>
         <div class="card-title">Geometry Neon Dash</div>
-        <div class="card-desc">Jump over deadly spikes and blocks to the beat! Unlock legendary Flame Demon & Gold Matrix skins.</div>
+        <div class="card-desc">Jump over spikes and floating traps! Unlock 20 stages and legendary flame cube skins.</div>
         <div class="btn-group">
-          <a href="geometry.html" class="btn btn-play">Play Now</a>
+          <a href="geometry.html" class="btn btn-play">▶ PLAY</a>
         </div>
       </div>
     </div>
