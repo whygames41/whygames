@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Geometry Neon Dash Lite - WHY GAMES</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  body, html { width: 100%; height: 100%; overflow: hidden; background: #05050d; font-family: 'Poppins', sans-serif; }
+  #gameCanvas { display: block; width: 100vw; height: 100vh; object-fit: contain; }
+
+  .back-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(18, 20, 32, 0.85);
+    border: 1px solid #4a5568;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    text-decoration: none;
+    z-index: 50;
+  }
+
+  .top-hud {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    display: flex;
+    gap: 12px;
+    z-index: 50;
+  }
+  .hud-badge {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid #38bdf8;
+    color: #facc15;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+  .shop-btn-top {
+    background: linear-gradient(135deg, #a855f7, #ec4899);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  /* Modals */
+  #shopModal, #gameOverModal, #winModal {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 88%;
+    max-width: 480px;
+    background: rgba(10, 12, 22, 0.96);
+    border: 2px solid #a855f7;
+    border-radius: 18px;
+    padding: 20px;
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.4);
+    z-index: 100;
+  }
+
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+  .shop-card {
+    background: #171b2e;
+    border: 1px solid #334155;
+    padding: 10px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+  .legendary { border-color: #facc15; background: linear-gradient(135deg, #2a2010, #171b2e); }
+  
+  .btn-action {
+    background: #38bdf8;
+    color: #000;
+    border: none;
+    padding: 6px;
+    width: 100%;
+    border-radius: 6px;
+    font-weight: bold;
+    margin-top: 6px;
+    cursor: pointer;
+  }
+  .btn-ad {
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    color: #fff;
+  }
+
+  .modal-btn {
+    background: #22c55e;
+    border: none;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 10px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .close-btn { background: #ef4444; }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">⬅ WHY GAMES</a>
+
+<div class="top-hud">
+  <div class="hud-badge">⭐ <span id="starCounter">0</span></div>
+  <button class="shop-btn-top" onclick="toggleShop(true)">🛍️ SKINS</button>
+</div>
+
+<canvas id="gameCanvas" width="900" height="500"></canvas>
+
+<!-- Customization Shop -->
+<div id="shopModal">
+  <h2 style="color:#facc15; font-size:20px;">LEGENDARY CUBE VAULT</h2>
+  <div class="shop-grid">
+    <div class="shop-card">
+      <div style="font-size:24px;">🟩</div>
+      <h4>Neon Classic</h4>
+      <p style="color:#38bdf8;">Default</p>
+      <button class="btn-action" onclick="equipSkin('classic')">Equip</button>
+    </div>
+    <div class="shop-card legendary">
+      <div style="font-size:24px;">🔥</div>
+      <h4 style="color:#facc15;">Flame Demon</h4>
+      <p style="color:#facc15;">25 Stars</p>
+      <button class="btn-action" onclick="buySkin('flame', 25)">Unlock</button>
+    </div>
+    <div class="shop-card legendary">
+      <div style="font-size:24px;">👑</div>
+      <h4 style="color:#facc15;">Golden Matrix</h4>
+      <p style="color:#4ade80;">VIP Reward</p>
+      <button class="btn-action btn-ad" onclick="watchAdReward('gold_skin')">📺 Unlock via Ad</button>
+    </div>
+    <div class="shop-card">
+      <div style="font-size:24px;">⭐</div>
+      <h4>Star Stash</h4>
+      <p style="color:#4ade80;">+50 Stars</p>
+      <button class="btn-action btn-ad" onclick="watchAdReward('stars')">📺 Watch for Stars</button>
+    </div>
+  </div>
+  <button class="modal-btn close-btn" onclick="toggleShop(false)">RESUME RUN</button>
+</div>
+
+<!-- Game Over -->
+<div id="gameOverModal">
+  <h2 style="color:#ef4444; font-size:26px;">CRASHED!</h2>
+  <p style="margin: 8px 0; font-size:13px; color:#94a3b8;" id="progressPercent">Attempt: 45% Cleared</p>
+  <button class="modal-btn" style="background:linear-gradient(135deg, #a855f7, #6366f1);" onclick="watchAdReward('revive')">⚡ Watch Ad to Revive</button>
+  <button class="modal-btn" onclick="restartLevel()">Try Again (Tap Screen)</button>
+</div>
+
+<!-- Victory -->
+<div id="winModal">
+  <h2 style="color:#facc15; font-size:28px;">🏆 100% COMPLETE! 🏆</h2>
+  <p style="margin: 10px 0; font-size:14px;">You dominated Geometry Neon Dash!</p>
+  <button class="modal-btn" onclick="restartLevel()">PLAY AGAIN</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const AD_SMARTLINK = "https://auctionr.org/4/0ecf866196856ac93826c721e0c25524";
+
+// Audio Synthesis
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(freq, type='square', duration=0.08) {
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e){}
+}
+
+const player = {
+  x: 100, y: 360, size: 36,
+  vy: 0, gravity: 0.85, jumpForce: -13,
+  isGrounded: true, rotation: 0,
+  skin: 'classic', stars: 20
+};
+
+let obstacles = [];
+let particles = [];
+let speed = 6;
+let distance = 0;
+const TRACK_LENGTH = 5200;
+let gameOver = false;
+let gameWon = false;
+let isShopOpen = false;
+
+// Generate Procedural Dash Track
+function initTrack() {
+  obstacles = [];
+  distance = 0;
+  player.y = 360;
+  player.vy = 0;
+  player.rotation = 0;
+  gameOver = false;
+  gameWon = false;
+
+  for(let x = 600; x < TRACK_LENGTH; x += 180 + Math.random() * 200) {
+    const typeRand = Math.random();
+    if(typeRand < 0.5) {
+      // Single Spike
+      obstacles.push({ x, y: 396, w: 32, h: 32, type: 'spike' });
+    } else if(typeRand < 0.8) {
+      // Double Spike
+      obstacles.push({ x, y: 396, w: 32, h: 32, type: 'spike' });
+      obstacles.push({ x: x + 34, y: 396, w: 32, h: 32, type: 'spike' });
+    } else {
+      // Solid Block
+      obstacles.push({ x, y: 364, w: 36, h: 36, type: 'block' });
+    }
+  }
+}
+initTrack();
+
+// Controls
+function jump() {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  if(gameOver || isShopOpen || gameWon) return;
+
+  if(player.isGrounded) {
+    player.vy = player.jumpForce;
+    player.isGrounded = false;
+    playBeep(420, 'triangle', 0.12);
+  }
+}
+
+window.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
+window.addEventListener('touchstart', (e) => {
+  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal')) {
+    jump();
+  }
+});
+window.addEventListener('mousedown', (e) => {
+  if(!e.target.closest('button') && !e.target.closest('a') && !e.target.closest('#shopModal') && !e.target.closest('#gameOverModal')) {
+    jump();
+  }
+});
+
+function toggleShop(open) {
+  isShopOpen = open;
+  document.getElementById('shopModal').style.display = open ? 'block' : 'none';
+}
+
+function equipSkin(s) {
+  player.skin = s;
+  alert("Skin Equipped!");
+}
+
+function buySkin(s, cost) {
+  if(player.stars >= cost) {
+    player.stars -= cost;
+    player.skin = s;
+    updateStarUI();
+    alert("Unlocked & Equipped!");
+  } else {
+    alert("Not enough stars! Watch an ad to get +50 stars.");
+  }
+}
+
+function updateStarUI() {
+  document.getElementById('starCounter').innerText = player.stars;
+}
+
+function watchAdReward(type) {
+  window.open(AD_SMARTLINK, '_blank');
+  setTimeout(() => {
+    if(type === 'stars') {
+      player.stars += 50;
+      updateStarUI();
+      alert("Reward: +50 Stars Added!");
+    } else if(type === 'gold_skin') {
+      player.skin = 'gold';
+      alert("Legendary Golden Matrix Skin Unlocked!");
+    } else if(type === 'revive') {
+      document.getElementById('gameOverModal').style.display = 'none';
+      player.y = 360;
+      player.vy = 0;
+      gameOver = false;
+      alert("Revived!");
+    }
+  }, 700);
+}
+
+function restartLevel() {
+  document.getElementById('gameOverModal').style.display = 'none';
+  document.getElementById('winModal').style.display = 'none';
+  initTrack();
+}
+
+function spawnSparks(x, y, color) {
+  for(let i=0; i<8; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 8,
+      vy: (Math.random() - 0.5) * 8,
+      color, life: 18
+    });
+  }
+}
+
+function update() {
+  if(gameOver || isShopOpen || gameWon) return;
+
+  distance += speed;
+
+  // Physics
+  player.vy += player.gravity;
+  player.y += player.vy;
+
+  if(player.y >= 360) {
+    player.y = 360;
+    player.vy = 0;
+    player.isGrounded = true;
+    player.rotation = Math.round(player.rotation / (Math.PI / 2)) * (Math.PI / 2);
+  } else {
+    player.rotation += 0.12;
+  }
+
+  // Particle Trail
+  if(Math.random() < 0.6) {
+    const col = player.skin === 'flame' ? '#f97316' : (player.skin === 'gold' ? '#facc15' : '#00f2fe');
+    particles.push({ x: player.x, y: player.y + player.size - 4, vx: -speed + 1, vy: (Math.random()-0.5)*2, color: col, life: 12 });
+  }
+
+  // Obstacle Collision
+  obstacles.forEach(obs => {
+    obs.x -= speed;
+
+    // AABB Check
+    if(player.x + player.size - 6 > obs.x && player.x + 6 < obs.x + obs.w &&
+       player.y + player.size - 4 > obs.y && player.y + 4 < obs.y + obs.h) {
+      
+      playBeep(120, 'sawtooth', 0.2);
+      spawnSparks(player.x + 18, player.y + 18, '#ff3b3b');
+      gameOver = true;
+      const pct = Math.min(99, Math.floor((distance / TRACK_LENGTH) * 100));
+      document.getElementById('progressPercent').innerText = `Attempt: ${pct}% Cleared`;
+      document.getElementById('gameOverModal').style.display = 'block';
+    }
+  });
+
+  // Particles Lifecycle
+  particles.forEach((p, pi) => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    if(p.life <= 0) particles.splice(pi, 1);
+  });
+
+  // Check Track Completion
+  if(distance >= TRACK_LENGTH && !gameWon) {
+    gameWon = true;
+    player.stars += 30;
+    updateStarUI();
+    document.getElementById('winModal').style.display = 'block';
+  }
+}
+
+function draw() {
+  // Pulsing Neon Grid Background
+  ctx.fillStyle = '#090a14';
+  ctx.fillRect(0, 0, 900, 500);
+
+  ctx.strokeStyle = '#1e1b4b';
+  ctx.lineWidth = 1;
+  const gridShift = distance % 40;
+  for(let x = -gridShift; x < 900; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 500); ctx.stroke(); }
+  for(let y = 0; y < 500; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(900, y); ctx.stroke(); }
+
+  // Ground Line
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 396, 900, 104);
+  ctx.strokeStyle = '#00f2fe';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, 396); ctx.lineTo(900, 396); ctx.stroke();
+
+  // Progress Bar
+  const progPct = Math.min(1, distance / TRACK_LENGTH);
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillRect(200, 16, 500, 8);
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(200, 16, 500 * progPct, 8);
+
+  // Particles
+  particles.forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 4, 4);
+  });
+
+  // Obstacles
+  obstacles.forEach(obs => {
+    if(obs.x > -50 && obs.x < 950) {
+      if(obs.type === 'spike') {
+        ctx.fillStyle = '#ef4444';
+        ctx.strokeStyle = '#f87171';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(obs.x, obs.y + obs.h);
+        ctx.lineTo(obs.x + obs.w / 2, obs.y);
+        ctx.lineTo(obs.x + obs.w, obs.y + obs.h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = '#6366f1';
+        ctx.strokeStyle = '#a5b4fc';
+        ctx.lineWidth = 2;
+        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+        ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+      }
+    }
+  });
+
+  // Player Cube
+  ctx.save();
+  ctx.translate(player.x + player.size / 2, player.y + player.size / 2);
+  ctx.rotate(player.rotation);
+
+  if(player.skin === 'flame') {
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(4, -8, 6, 6);
+  } else if(player.skin === 'gold') {
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(4, -8, 6, 6);
+  } else {
+    ctx.fillStyle = '#22c55e';
+    ctx.fillRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-player.size/2, -player.size/2, player.size, player.size);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(4, -8, 6, 6);
+  }
+  ctx.restore();
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
